@@ -98,7 +98,7 @@ create_choropleth <- function(mod_data, legend_title = "Change in yield per year
     #                                                   map_data$region)]) > 15, "white", "black")) +
     geom_text(
       data = map_data %>%
-        select(Slope, long.centroid, lat.centroid) %>%
+        dplyr::select(Slope, long.centroid, lat.centroid) %>%
         distinct(),
       aes(
         x = long.centroid, y = lat.centroid,
@@ -163,8 +163,9 @@ for (response_var in c(
 
   if (response_var == "yield_lb_acre") {
     nass <- readRDS(file.path("figure_inputs", "nass_yield_trends.rds"))
-    f3 <- nass$data %>%
-      select(State, Slope, Slope_SE, pval) %>%
+    f3 <- nass$plot_data %>%
+      rename(State = state_alpha, Slope = slope, Slope_SE = se) %>%
+      dplyr::select(State, Slope, Slope_SE, pval) %>%
       distinct() %>%
       mutate(
         mod = "NASS",

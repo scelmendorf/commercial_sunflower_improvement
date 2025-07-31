@@ -18,7 +18,7 @@ library(purrr)
 library (metafor)
 
 test<-FALSE
-use_piepho<-FALSE
+use_piepho<-TRUE
 
 threshold_entries_per_hybrid<-3
 threshold_years_per_county<-3

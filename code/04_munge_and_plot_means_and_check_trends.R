@@ -1,3 +1,6 @@
+library (tidyverse)
+library (cowplot)
+
 # function to rebuild the trends plots (means and checks)
 rebuild_trends_plot <- function(
   trend_data,
@@ -403,6 +406,7 @@ rebuild_gain_plot <- function(
   return(new_plot)
 }
 
+# run over all variables -------------------------------------------------
 
 for (response_var in c(
   "oil_pct",
@@ -446,6 +450,56 @@ for (response_var in c(
   gen <- rebuild_gain_plot(gen_filename)
   env <- rebuild_gain_plot(env_filename)
 
+  if (response_var == "yield_lb_acre") {
+  
+  nass_inputs <-readRDS(file.path(
+    "figure_inputs", "nass_yield_trends.rds")
+  )
+
+  nass_plot <- ggplot(nass_inputs$plot_data, aes(x = as.numeric(year), y = Value,
+                                      group = state_alpha)) +
+  geom_point() +
+  geom_smooth(method = "lm", aes(color = color), se = TRUE) +
+    geom_label(data = nass_inputs$state_labels,
+               aes(x = label_positions$x, y = label_positions$y, label = label),
+               hjust = 0, vjust = 1, size = 3.5,
+               fill = "white", label.size = NA, alpha = 0.7) +
+  facet_wrap(~factor(state_alpha, c(rev(ordered_states))), ncol = 1) +
+  scale_color_identity() +
+  ggtitle("Yield Trends by State \n Source: USDA - NASS") +
+  labs(
+  subtitle = paste(
+        "Per-state predictions with 95% CI and slope",
+        nass$inputs$pval_text,
+        sep = "\n"
+      ),
+      x = "Year",
+    y = "lb/acre")+
+  theme_minimal(base_size = 14)
+    
+    combined_plot <- (nass_plot +theme(plot.subtitle = element_text(size = 10)))+
+      (trends$trial_plot +
+    ggtitle("Trial Means") +
+    theme(plot.subtitle = element_text(size = 10))) +
+    (gen +
+      ggtitle('Genetic') +
+      theme(plot.subtitle = element_text(size = 10))) +
+    (env +
+      ggtitle('Environment') +
+      theme(plot.subtitle = element_text(size = 10))) +
+    (trends$check_plot +
+      ggtitle("Checks") +
+      theme(plot.subtitle = element_text(size = 10))) +
+    plot_layout(widths = c(1, 1, 1, 1, 1))
+    
+    ggsave(
+    file.path("figures", paste0(response_var, "_all_trends.jpg")),
+    combined_plot,
+    width = 25,
+    height = 8
+  ) 
+    
+  }else{
   combined_plot <- (trends$trial_plot +
     ggtitle("Trial Means") +
     theme(plot.subtitle = element_text(size = 10))) +
@@ -467,6 +521,7 @@ for (response_var in c(
     height = 8
   )
 }
+  }
 
 # Planting/harvest dates -------------------------------------------------
 

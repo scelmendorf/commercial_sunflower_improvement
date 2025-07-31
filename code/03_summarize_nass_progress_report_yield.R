@@ -1,6 +1,7 @@
 # code to check out planting dates by date from NASS
 # SCE 20 Nov 2024
 # updated 19 March 2024 for some summary stats
+# updated 29 July 2025 for generic plotting
 
 # setup
 library(rnassqs)
@@ -119,7 +120,15 @@ plot_data %>%
     max_year = max(as.numeric(year), na.rm = TRUE),
     nyr = length(unique(year)))
   
+# summarize difference in trends
+trends_mod <- lm(Value ~ state_name*year, data = plot_data %>%
+  mutate(year = as.numeric(year)))
 
+
+pval = round(anova(trends_mod)$`Pr(>F)`[3],3) # p-value for interaction term
+
+pval_text <- paste0("State * Year interaction P = ", 
+round(anova(trends_mod)$`Pr(>F)`[3],3)) # p-value for interaction term
 # Step 4: Plot with per-panel color
 yield_plot <- ggplot(plot_data, aes(x = as.numeric(year), y = Value,
                                       group = state_alpha)) +
@@ -131,10 +140,14 @@ yield_plot <- ggplot(plot_data, aes(x = as.numeric(year), y = Value,
                fill = "white", label.size = NA, alpha = 0.7) +
   facet_wrap(~factor(state_alpha, c(rev(ordered_states))), ncol = 1) +
   scale_color_identity() +
-  ggtitle("Oilseed Sunflower Yield Trends by State") +
-  labs( subtitle =
-    "Source: USDA - NASS",
-    x = "Year",
+  ggtitle("Yield Trends by State \n Source: USDA - NASS") +
+  labs(
+  subtitle = paste(
+        "Per-state predictions with 95% CI and slope",
+        pval_text,
+        sep = "\n"
+      ),
+      x = "Year",
     y = "lb/acre")+
   theme_minimal(base_size = 14)
 
@@ -148,18 +161,18 @@ yield_plot <- ggplot(plot_data, aes(x = as.numeric(year), y = Value,
 # )
 
 #sce start HERE, need to make the plot_data right
-mydat = state_trends %>%
-  rename(
-         State = state_alpha,
-         Slope = slope,
-         Slope_SE = se) %>%
-  select(-color)
+# mydat = state_trends %>%
+#   rename(
+#          State = state_alpha,
+#          Slope = slope,
+#          Slope_SE = se) %>%
+#   select(-color)
 
 
 yield_data <-list(
-  meta_reg = NULL,
   plot_data = plot_data,
-  data = mydat,
+  #data = mydat,
+  pval_text = pval_text,
   ordered_states = ordered_states,
   state_labels = state_labels,
   label_positions = label_positions)

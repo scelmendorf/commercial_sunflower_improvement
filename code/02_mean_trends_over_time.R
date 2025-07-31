@@ -4,7 +4,7 @@
 # TODO
 
 # Packages ---------------------------------------------------------------
-#pacman::p_unload(all)
+pacman::p_unload(all)
 library(tidyverse)
 library (ggplot2)
 library(broom.mixed)
@@ -140,6 +140,17 @@ for (response_var in c("planting_doy", "harvest_doy", "oil_pct","yield_lb_acre",
       yi_var = .data[[paste0(response_var, "_mean")]],
       vi_var = (.data[[paste0(response_var, "_se")]])^2
     )
+  #require at least 10 years of data for trends
+  state_cts = trial_means %>%
+    dplyr::select(State, Year) %>%
+    group_by(State) %>%
+    distinct() %>%
+    dplyr::tally() %>%
+    filter(n > 10)
+
+  trial_means <- trial_means %>%
+    inner_join(state_cts, by = "State")
+  
   if (response_var %in% c('planting_doy', 'harvest_doy')){
     m1 <-lme4::lmer(yi_var ~ Year * State + (1 | garden_county) + (1 | yearfact),
                     data = trial_means)
@@ -468,6 +479,16 @@ for (response_var in c("planting_doy", "harvest_doy", "oil_pct","yield_lb_acre",
       mutate(yearfact = as.factor(Year)) %>%
       filter(!is.na(garden_county)) %>%
       filter(!is.na(.data[[response_var]]))
+
+    state_cts = trial_vals %>%
+    dplyr::select(State, Year) %>%
+    group_by(State) %>%
+    distinct() %>%
+    dplyr::tally() %>%
+    filter(n > 10)
+
+  trial_vals <- trial_vals %>%
+    inner_join(state_cts, by = "State")
     
     m1 <- lmerTest::lmer(paste0(response_var, "", "~ State*Year + Unif_Name + (1 | State/garden_county) + (1|yearfact)"),
                          data = trial_vals,
@@ -738,34 +759,34 @@ tinytable::save_tt(
 )
 
 
-library (jpeg)
-library (grid)
-library (gridExtra)
-for (response_var in c(
-  "oil_pct", "yield_lb_acre", "flower_50pct_days_past_planting",
-  "oil_yield_lb_acre", "harvest_moisture_pct",
-  "value_per_acre", "value_generic",
-  "height_cm", "test_weight_lbs_bushel"
-)){
-  plots <- list.files(
-    file.path("temp_plots", "crop_science"),
-    pattern = paste0(response_var, ".*\\.jpg$")
-  )
+# library (jpeg)
+# library (grid)
+# library (gridExtra)
+# for (response_var in c(
+#   "oil_pct", "yield_lb_acre", "flower_50pct_days_past_planting",
+#   "oil_yield_lb_acre", "harvest_moisture_pct",
+#   "value_per_acre", "value_generic",
+#   "height_cm", "test_weight_lbs_bushel"
+# )){
+#   plots <- list.files(
+#     file.path("temp_plots", "crop_science"),
+#     pattern = paste0(response_var, ".*\\.jpg$")
+#   )
   
   
-  f1<-readJPEG(file.path("temp_plots", "crop_science", plots[1]))
-  f2<-readJPEG(file.path("temp_plots", "crop_science", plots[2]))
+#   f1<-readJPEG(file.path("temp_plots", "crop_science", plots[1]))
+#   f2<-readJPEG(file.path("temp_plots", "crop_science", plots[2]))
   
-  # Convert to raster grobs
-  g1 <- rasterGrob(f1, interpolate = TRUE)
-  g2 <- rasterGrob(f2, interpolate = TRUE)
+#   # Convert to raster grobs
+#   g1 <- rasterGrob(f1, interpolate = TRUE)
+#   g2 <- rasterGrob(f2, interpolate = TRUE)
   
-  # Arrange side by side
-  jpeg(file.path("temp_plots", "crop_science", "combined_plots",
-                 paste0(response_var,".jpg")), width = 800, height = 800, quality = 95)
-  grid.arrange(g1, g2, ncol = 2)
-  dev.off()
-}
+#   # Arrange side by side
+#   jpeg(file.path("temp_plots", "crop_science", "combined_plots",
+#                  paste0(response_var,".jpg")), width = 800, height = 800, quality = 95)
+#   grid.arrange(g1, g2, ncol = 2)
+#   dev.off()
+# }
 #   
 #   library(patchwork)
 #   ylim1 <-ggplot_build(f1)$layout$panel_scales_y[[1]]$range$range
