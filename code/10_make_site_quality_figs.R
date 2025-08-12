@@ -5,7 +5,7 @@ library(maps)
 
 # Step 1: Read the GeoTIFF
 # going to come in as ESPG 3857
-r <- rast("C:/Users/Sarah/Downloads/croppedSiteQualityDifference.tif")
+r <- rast("C:/Users/Sarah/Downloads/croppedSiteQualityDifference_12_Aug_2025.tif")
 
 # Step 2: Get state polygons and convert to sf
 states_sf <- st_as_sf(map("state", plot = FALSE, fill = TRUE))

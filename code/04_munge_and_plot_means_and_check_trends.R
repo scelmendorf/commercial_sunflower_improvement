@@ -1,12 +1,11 @@
-library (tidyverse)
-library (cowplot)
+library(tidyverse)
+library(cowplot)
 
 # function to rebuild the trends plots (means and checks)
 rebuild_trends_plot <- function(
-  trend_data,
-  trend_check_data,
-  custom_order = NULL
-) {
+    trend_data,
+    trend_check_data,
+    custom_order = NULL) {
   library(ggplot2)
   library(dplyr)
   library(patchwork)
@@ -23,7 +22,7 @@ rebuild_trends_plot <- function(
   pval_text <- trend_data$pval_text
   pval_text_check <- trend_check_data$pval_text
   nocheck_data <- trend_data$data
-  #check_data <- trend_check_data$data
+  # check_data <- trend_check_data$data
 
   # Determine which states are in both datasets
   states_all <- unique(c(meta_reg$State, meta_reg_check$State))
@@ -53,7 +52,7 @@ rebuild_trends_plot <- function(
 
   # Plot 1: Trial means
   # Get trial data for plotting
-  #nocheck_data <- if (!is.null(trend_data$nocheck_data)) trend_data$nocheck_data else data.frame()
+  # nocheck_data <- if (!is.null(trend_data$nocheck_data)) trend_data$nocheck_data else data.frame()
 
   trend_plot <- ggplot(meta_reg, aes(x = Year)) +
     geom_point(
@@ -105,7 +104,7 @@ rebuild_trends_plot <- function(
   # Plot 2: Check varieties
   trend_plot_check <- ggplot(meta_reg_check, aes(x = Year)) +
     geom_point(aes(y = Estimate, shape = Unif_Name), alpha = 0.6) +
-    #geom_point(data = check_data, aes(y = .data[[response_var]]), alpha = 0.05) +
+    # geom_point(data = check_data, aes(y = .data[[response_var]]), alpha = 0.05) +
     geom_line(aes(y = Predicted, color = colors), size = 1) +
     geom_ribbon(aes(ymin = CI_low, ymax = CI_up, fill = colors), alpha = 0.2) +
     scale_color_identity() +
@@ -145,39 +144,42 @@ rebuild_trends_plot <- function(
       y = paste0(response_var, " (checks only)")
     )
 
-  #combined_plot <-cowplot::plot_grid(trend_plot, trend_plot_check)
+  # combined_plot <-cowplot::plot_grid(trend_plot, trend_plot_check)
   # Combine plots side by side
 
   # Return all three plots and the ordered states used
   return(list(
     trial_plot = trend_plot,
     check_plot = trend_plot_check,
-    #combined_plot = combined_plot#,
+    # combined_plot = combined_plot#,
     ordered_states = ordered_states
   ))
 }
-
-rebuild_trends_plot_planting <- function(trend_data, custom_order = NULL) {
+rebuild_trends_plot_planting(
+  trend_filename,
+  nass_inputs
+)
+rebuild_trends_plot_planting <- function(trend_data, nass_data, custom_order = NULL) {
   library(ggplot2)
   library(dplyr)
   library(patchwork)
   trend_data <- readRDS(trend_data)
-  #trend_check_data <-readRDS(trend_check_data)
+  # trend_check_data <-readRDS(trend_check_data)
   # Extract data from the lists
   meta_reg <- trend_data$meta_reg
-  #meta_reg_check <- trend_check_data$data
+  # meta_reg_check <- trend_check_data$data
   response_var <- trend_data$response_var
   state_labels <- trend_data$state_labels
-  #state_labels_check <- trend_check_data$state_labels_check
+  # state_labels_check <- trend_check_data$state_labels_check
   label_positions <- trend_data$label_positions
-  #label_positions_check <- trend_check_data$label_positions_check
+  # label_positions_check <- trend_check_data$label_positions_check
   pval_text <- trend_data$pval_text
-  #pval_text_check <- trend_check_data$pval_text
+  # pval_text_check <- trend_check_data$pval_text
   no_check_subset <- trend_data$data
-  #check_data <- trend_check_data$data
+  check_data <- nass_data$plot_data
 
   # Determine which states are in both datasets
-  states_all <- unique(c(meta_reg$State))
+  states_all <- unique(c(meta_reg$State, check_data$state_alpha))
 
   # Use custom order if provided, otherwise default south to north
   if (is.null(custom_order)) {
@@ -191,20 +193,20 @@ rebuild_trends_plot_planting <- function(trend_data, custom_order = NULL) {
   # For any state in the data but not in the order, append to the end
   missing_states_meta_reg <- setdiff(
     ordered_states,
-    unique(no_check_subset$State)
+    unique(meta_reg$State)
   )
 
   meta_reg <- meta_reg %>%
     bind_rows(data.frame(State = missing_states_meta_reg))
 
-  #missing_states_meta_reg_check <- setdiff(ordered_states, unique(meta_reg_check$State))
+  # missing_states_meta_reg_check <- setdiff(ordered_states, unique(meta_reg_check$State))
 
-  #meta_reg_check<-meta_reg_check %>%
+  # meta_reg_check<-meta_reg_check %>%
   # bind_rows(data.frame(State = missing_states_meta_reg_check))
 
   # Plot 1: Trial means
   # Get trial data for plotting
-  #nocheck_data <- if (!is.null(trend_data$nocheck_data)) trend_data$nocheck_data else data.frame()
+  # nocheck_data <- if (!is.null(trend_data$nocheck_data)) trend_data$nocheck_data else data.frame()
 
   trend_plot <- ggplot(meta_reg, aes(x = Year)) +
     geom_point(
@@ -212,8 +214,8 @@ rebuild_trends_plot_planting <- function(trend_data, custom_order = NULL) {
       aes(y = .data[[response_var]]),
       alpha = 0.05
     ) +
-    #geom_point(aes(y = Estimate), alpha = 0.6) +
-    #geom_errorbar(aes(ymin = Estimate - SE, ymax = Estimate + SE), width = 0.2, alpha = 0.4) +
+    # geom_point(aes(y = Estimate), alpha = 0.6) +
+    # geom_errorbar(aes(ymin = Estimate - SE, ymax = Estimate + SE), width = 0.2, alpha = 0.4) +
     geom_line(aes(y = Predicted, color = colors), size = 1) +
     geom_ribbon(aes(ymin = CI_low, ymax = CI_up, fill = colors), alpha = 0.2) +
     scale_color_identity() +
@@ -244,7 +246,7 @@ rebuild_trends_plot_planting <- function(trend_data, custom_order = NULL) {
   # Return all three plots and the ordered states used
   return(list(
     trial_plot = trend_plot,
-    #combined_plot = combined_plot#,
+    # combined_plot = combined_plot#,
     ordered_states = ordered_states
   ))
 }
@@ -252,15 +254,14 @@ rebuild_trends_plot_planting <- function(trend_data, custom_order = NULL) {
 
 # function to rebuild the trends plots (means and checks)
 rebuild_gain_plot <- function(
-  rds_file_path,
-  new_theme = NULL,
-  new_title = NULL,
-  new_subtitle = NULL,
-  new_x_label = NULL,
-  new_y_label = NULL,
-  new_facet_layout = NULL,
-  ordered_states = c("TX", "KS", "CO", "NE", "SD", "ND")
-) {
+    rds_file_path,
+    new_theme = NULL,
+    new_title = NULL,
+    new_subtitle = NULL,
+    new_x_label = NULL,
+    new_y_label = NULL,
+    new_facet_layout = NULL,
+    ordered_states = c("TX", "KS", "CO", "NE", "SD", "ND")) {
   # Load the saved plot data
   plot_data <- readRDS(rds_file_path)
 
@@ -269,7 +270,7 @@ rebuild_gain_plot <- function(
   data <- plot_data$data
   state_labels <- plot_data$state_labels
   label_positions <- plot_data$label_positions
-  #ordered_states <- plot_data$ordered_states
+  # ordered_states <- plot_data$ordered_states
   pval_text <- plot_data$pval_text
   response_var <- plot_data$response_var
 
@@ -424,15 +425,15 @@ for (response_var in c(
     pattern = response_var,
     full.names = TRUE
   )
-  all_files <- all_files[grepl('rds', all_files)]
+  all_files <- all_files[grepl("rds", all_files)]
   if (response_var == "yield_lb_acre") {
-    all_files <- all_files[!grepl('oil', all_files)]
+    all_files <- all_files[!grepl("oil", all_files)]
   }
 
-  trend_filename <- all_files[grepl('trend_plot.rds$', all_files)]
-  check_filename <- all_files[grepl('trend_plot_check.rds$', all_files)]
-  env_filename <- all_files[grepl('agronomy_gain_p.rds$', all_files)]
-  gen_filename <- all_files[grepl('genetic_gain_p.rds$', all_files)]
+  trend_filename <- all_files[grepl("trend_plot.rds$", all_files)]
+  check_filename <- all_files[grepl("trend_plot_check.rds$", all_files)]
+  env_filename <- all_files[grepl("agronomy_gain_p.rds$", all_files)]
+  gen_filename <- all_files[grepl("genetic_gain_p.rds$", all_files)]
   #
   #
   #
@@ -451,77 +452,80 @@ for (response_var in c(
   env <- rebuild_gain_plot(env_filename)
 
   if (response_var == "yield_lb_acre") {
-  
-  nass_inputs <-readRDS(file.path(
-    "figure_inputs", "nass_yield_trends.rds")
-  )
+    nass_inputs <- readRDS(file.path(
+      "figure_inputs", "nass_yield_trends.rds"
+    ))
 
-  nass_plot <- ggplot(nass_inputs$plot_data, aes(x = as.numeric(year), y = Value,
-                                      group = state_alpha)) +
-  geom_point() +
-  geom_smooth(method = "lm", aes(color = color), se = TRUE) +
-    geom_label(data = nass_inputs$state_labels,
-               aes(x = label_positions$x, y = label_positions$y, label = label),
-               hjust = 0, vjust = 1, size = 3.5,
-               fill = "white", label.size = NA, alpha = 0.7) +
-  facet_wrap(~factor(state_alpha, c(rev(ordered_states))), ncol = 1) +
-  scale_color_identity() +
-  ggtitle("Yield Trends by State \n Source: USDA - NASS") +
-  labs(
-  subtitle = paste(
-        "Per-state predictions with 95% CI and slope",
-        nass$inputs$pval_text,
-        sep = "\n"
-      ),
-      x = "Year",
-    y = "lb/acre")+
-  theme_minimal(base_size = 14)
-    
-    combined_plot <- (nass_plot +theme(plot.subtitle = element_text(size = 10)))+
+    nass_plot <- ggplot(nass_inputs$plot_data, aes(
+      x = as.numeric(year), y = Value,
+      group = state_alpha
+    )) +
+      geom_point() +
+      geom_smooth(method = "lm", aes(color = color), se = TRUE) +
+      geom_label(
+        data = nass_inputs$state_labels,
+        aes(x = label_positions$x, y = label_positions$y, label = label),
+        hjust = 0, vjust = 1, size = 3.5,
+        fill = "white", label.size = NA, alpha = 0.7
+      ) +
+      facet_wrap(~ factor(state_alpha, c(rev(ordered_states))), ncol = 1) +
+      scale_color_identity() +
+      ggtitle("Yield Trends by State \n Source: USDA - NASS") +
+      labs(
+        subtitle = paste(
+          "Per-state predictions with 95% CI and slope",
+          nass_inputs$pval_text,
+          sep = "\n"
+        ),
+        x = "Year",
+        y = "lb/acre"
+      ) +
+      theme_minimal(base_size = 14)
+
+    combined_plot <- (nass_plot + theme(plot.subtitle = element_text(size = 10))) +
       (trends$trial_plot +
-    ggtitle("Trial Means") +
-    theme(plot.subtitle = element_text(size = 10))) +
-    (gen +
-      ggtitle('Genetic') +
-      theme(plot.subtitle = element_text(size = 10))) +
-    (env +
-      ggtitle('Environment') +
-      theme(plot.subtitle = element_text(size = 10))) +
-    (trends$check_plot +
-      ggtitle("Checks") +
-      theme(plot.subtitle = element_text(size = 10))) +
-    plot_layout(widths = c(1, 1, 1, 1, 1))
-    
-    ggsave(
-    file.path("figures", paste0(response_var, "_all_trends.jpg")),
-    combined_plot,
-    width = 25,
-    height = 8
-  ) 
-    
-  }else{
-  combined_plot <- (trends$trial_plot +
-    ggtitle("Trial Means") +
-    theme(plot.subtitle = element_text(size = 10))) +
-    (gen +
-      ggtitle('Genetic') +
-      theme(plot.subtitle = element_text(size = 10))) +
-    (env +
-      ggtitle('Environment') +
-      theme(plot.subtitle = element_text(size = 10))) +
-    (trends$check_plot +
-      ggtitle("Checks") +
-      theme(plot.subtitle = element_text(size = 10))) +
-    plot_layout(widths = c(1, 1, 1, 1))
+        ggtitle("Trial Means") +
+        theme(plot.subtitle = element_text(size = 10))) +
+      (gen +
+        ggtitle("Genetic") +
+        theme(plot.subtitle = element_text(size = 10))) +
+      (env +
+        ggtitle("Environment") +
+        theme(plot.subtitle = element_text(size = 10))) +
+      (trends$check_plot +
+        ggtitle("Checks") +
+        theme(plot.subtitle = element_text(size = 10))) +
+      plot_layout(widths = c(1, 1, 1, 1, 1))
 
-  ggsave(
-    file.path("figures", paste0(response_var, "_all_trends.jpg")),
-    combined_plot,
-    width = 20,
-    height = 8
-  )
-}
+    ggsave(
+      file.path("figures", paste0(response_var, "_all_trends.jpg")),
+      combined_plot,
+      width = 25,
+      height = 8
+    )
+  } else {
+    combined_plot <- (trends$trial_plot +
+      ggtitle("Trial Means") +
+      theme(plot.subtitle = element_text(size = 10))) +
+      (gen +
+        ggtitle("Genetic") +
+        theme(plot.subtitle = element_text(size = 10))) +
+      (env +
+        ggtitle("Environment") +
+        theme(plot.subtitle = element_text(size = 10))) +
+      (trends$check_plot +
+        ggtitle("Checks") +
+        theme(plot.subtitle = element_text(size = 10))) +
+      plot_layout(widths = c(1, 1, 1, 1))
+
+    ggsave(
+      file.path("figures", paste0(response_var, "_all_trends.jpg")),
+      combined_plot,
+      width = 20,
+      height = 8
+    )
   }
+}
 
 # Planting/harvest dates -------------------------------------------------
 
@@ -532,15 +536,55 @@ all_files <- list.files(
   pattern = response_var,
   full.names = TRUE
 )
-all_files <- all_files[grepl('rds', all_files)]
+all_files <- all_files[grepl("rds", all_files)]
 if (response_var == "yield_lb_acre") {
-  all_files <- all_files[!grepl('oil', all_files)]
+  all_files <- all_files[!grepl("oil", all_files)]
 }
 
-trend_filename <- all_files[grepl('trend_plot.rds$', all_files)]
+trend_filename <- all_files[grepl("trend_plot.rds$", all_files)]
+
+nass_inputs <- readRDS(file.path(
+  "figure_inputs", "nass_planting_trends.rds"
+))
+planting_plot <- rebuild_trends_plot_planting(
+  trend_filename,
+  nass_inputs
+)
+
+####
 
 
-planting_plot <- rebuild_trends_plot_planting(trend_filename)
+
+nass_plot_planting <- ggplot(nass_inputs$plot_data %>%
+  filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"), aes(
+  x = as.numeric(year), y = min_yday,
+  group = state_alpha
+)) +
+  geom_point() +
+  geom_smooth(method = "lm", aes(color = color), se = TRUE) +
+  geom_label(
+    data = nass_inputs$state_labels %>%
+      dplyr::filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"),
+    aes(
+      x = nass_inputs$label_positions$x[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"],
+      y = nass_inputs$label_positions$y[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"], label = label
+    ),
+    hjust = 0, vjust = 1, size = 3.5,
+    fill = "white", label.size = NA, alpha = 0.7
+  ) +
+  facet_wrap(~ factor(state_alpha, c(rev(ordered_states))), ncol = 1) +
+  scale_color_identity() +
+  ggtitle("Planting Date Trends by State \n Source: USDA - NASS") +
+  labs(
+    subtitle = paste(
+      "Per-state predictions with 95% CI and slope",
+      pval_text,
+      sep = "\n"
+    ),
+    x = "Year",
+    y = "planting doy"
+  ) +
+  theme_minimal(base_size = 14)
 
 
 response_var <- "harvest_doy"
@@ -550,29 +594,72 @@ all_files <- list.files(
   pattern = response_var,
   full.names = TRUE
 )
-all_files <- all_files[grepl('rds', all_files)]
+all_files <- all_files[grepl("rds", all_files)]
 if (response_var == "yield_lb_acre") {
-  all_files <- all_files[!grepl('oil', all_files)]
+  all_files <- all_files[!grepl("oil", all_files)]
 }
 
-trend_filename <- all_files[grepl('trend_plot.rds$', all_files)]
+trend_filename <- all_files[grepl("trend_plot.rds$", all_files)]
 
 
-harvest_plot <- rebuild_trends_plot_planting(trend_filename)
+nass_inputs <- readRDS(file.path(
+  "figure_inputs", "nass_harvest_trends.rds"
+))
+
+nass_plot_harvest <- ggplot(nass_inputs$plot_data %>%
+  filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"), aes(
+  x = as.numeric(year), y = min_yday,
+  group = state_alpha
+)) +
+  geom_point() +
+  geom_smooth(method = "lm", aes(color = color), se = TRUE) +
+  geom_label(
+    data = nass_inputs$state_labels %>%
+      dplyr::filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"),
+    aes(
+      x = nass_inputs$label_positions$x[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"],
+      y = nass_inputs$label_positions$y[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"], label = label
+    ),
+    hjust = 0, vjust = 1, size = 3.5,
+    fill = "white", label.size = NA, alpha = 0.7
+  ) +
+  facet_wrap(~ factor(state_alpha, c(rev(ordered_states))), ncol = 1) +
+  scale_color_identity() +
+  ggtitle("Harvest Date Trends by State \n Source: USDA - NASS") +
+  labs(
+    subtitle = paste(
+      "Per-state predictions with 95% CI and slope",
+      pval_text,
+      sep = "\n"
+    ),
+    x = "Year",
+    y = "Harvest doy"
+  ) +
+  theme_minimal(base_size = 14)
+
+
+harvest_plot <- rebuild_trends_plot_planting(
+  trend_filename,
+  nass_inputs
+)
 
 combined_plot <- plot_grid(
-  planting_plot$trial_plot +
-    ggtitle("Planting Date") +
+  nass_plot_planting +
+    theme(plot.subtitle = element_text(size = 10)) +
+    planting_plot$trial_plot +
+    ggtitle("Trial Planting") +
     theme(plot.subtitle = element_text(size = 10)),
-  harvest_plot$trial_plot +
-    ggtitle("Harvest Date") +
+  nass_plot_harvest +
+    theme(plot.subtitle = element_text(size = 10)) +
+    harvest_plot$trial_plot +
+    ggtitle("Trial Harvest") +
     theme(plot.subtitle = element_text(size = 10)),
   ncol = 2
 )
 
 ggsave(
-  file.path("figures", paste0('planting_harvest', "_all_trends.jpg")),
+  file.path("figures", paste0("planting_harvest", "_all_trends.jpg")),
   combined_plot,
-  width = 10,
+  width = 15,
   height = 8
 )
