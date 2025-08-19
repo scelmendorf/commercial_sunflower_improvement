@@ -97,10 +97,7 @@ doy_interp <- sunflower %>%
   mutate(
     Value = na.approx(Value, na.rm = FALSE),
     # Maintain other key columns (adjust as needed for your actual data)
-    year = year(date)#,
-    # For any remaining columns you want to maintain, add them here
-    # Either copying from the nearest non-NA value
-    #short_desc = first(short_desc)
+    year = year(date)
   ) %>%
   # Keep only the columns you need
   select(location_desc, date, Value, year, short_desc)
@@ -202,22 +199,9 @@ NE_planting_doy <- read.csv(file.path("data_derived", "sunflower_data_yield_clim
 # Step 2: Compute slope, p-value, se and color for each state
 
 doy_50_interp<-doy_50_interp %>%
-  #filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED") %>%
   left_join(., sunflower %>%
               select(location_desc, state_alpha) %>%
               distinct(), by = "location_desc")
-# doy_50_interp_plant<-doy_50_interp %>%
-#   filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED") %>%
-#   left_join(., sunflower %>%
-#               select(location_desc, state_alpha) %>%
-#               distinct(), by = "location_desc")
-# 
-# doy_50_interp_harv<-doy_50_interp %>%
-#   filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED") %>%
-#   left_join(., sunflower %>%
-#               select(location_desc, state_alpha) %>%
-#               distinct(), by = "location_desc")
-
 
 state_trends <- doy_50_interp %>%
   group_by(state_alpha, short_desc) %>%
@@ -234,23 +218,6 @@ state_trends <- doy_50_interp %>%
     )
     tibble(slope = slope, pval = pval, se = se, color = color)
   })
-
-
-# state_trends_harv <- doy_50_interp_harv %>%
-#   group_by(state_alpha) %>%
-#   do({
-#     fit <- lm(min_yday ~ as.numeric(year), data = .)
-#     tidy_fit <- broom::tidy(fit)
-#     slope <- tidy_fit$estimate[2]
-#     se <-tidy_fit$std.error[2]
-#     pval <- tidy_fit$p.value[2]
-#     color <- case_when(
-#       pval < 0.05 & slope > 0 ~ "green",
-#       pval < 0.05 & slope < 0 ~ "red",
-#       TRUE ~ "black"
-#     )
-#     tibble(slope = slope, pval = pval, se = se, color = color)
-#   })
 
 # Step 3: Join colors back to main dataset
 plot_data <- doy_50_interp %>%
@@ -328,11 +295,11 @@ planting_plot <- ggplot(plot_data %>%
   labs(
     subtitle = paste(
       "Per-state predictions with 95% CI and slope",
-      pval_text,
+      pval_text_plant,
       sep = "\n"
     ),
     x = "Year",
-    y = "planting doy")+
+    y = "planting doy") +
   theme_minimal(base_size = 14)
 
 
