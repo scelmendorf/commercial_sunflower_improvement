@@ -1,3 +1,7 @@
+# Clean workspace with pacman unload all
+if(!require(pacman)) install.packages("pacman")
+pacman::p_unload(all)
+
 library(tidyverse)
 library(cowplot)
 
@@ -22,7 +26,6 @@ rebuild_trends_plot <- function(
   pval_text <- trend_data$pval_text
   pval_text_check <- trend_check_data$pval_text
   nocheck_data <- trend_data$data
-  # check_data <- trend_check_data$data
 
   # Determine which states are in both datasets
   states_all <- unique(c(meta_reg$State, meta_reg_check$State))
@@ -104,7 +107,6 @@ rebuild_trends_plot <- function(
   # Plot 2: Check varieties
   trend_plot_check <- ggplot(meta_reg_check, aes(x = Year)) +
     geom_point(aes(y = Estimate, shape = Unif_Name), alpha = 0.6) +
-    # geom_point(data = check_data, aes(y = .data[[response_var]]), alpha = 0.05) +
     geom_line(aes(y = Predicted, color = colors), size = 1) +
     geom_ribbon(aes(ymin = CI_low, ymax = CI_up, fill = colors), alpha = 0.2) +
     scale_color_identity() +
@@ -144,14 +146,10 @@ rebuild_trends_plot <- function(
       y = paste0(response_var, " (checks only)")
     )
 
-  # combined_plot <-cowplot::plot_grid(trend_plot, trend_plot_check)
-  # Combine plots side by side
-
-  # Return all three plots and the ordered states used
+  # Return all plots and the ordered states used
   return(list(
     trial_plot = trend_plot,
     check_plot = trend_plot_check,
-    # combined_plot = combined_plot#,
     ordered_states = ordered_states
   ))
 }
@@ -161,17 +159,12 @@ rebuild_trends_plot_planting <- function(trend_data, nass_data, custom_order = N
   library(dplyr)
   library(patchwork)
   trend_data <- readRDS(trend_data)
-  # trend_check_data <-readRDS(trend_check_data)
   # Extract data from the lists
   meta_reg <- trend_data$meta_reg
-  # meta_reg_check <- trend_check_data$data
   response_var <- trend_data$response_var
   state_labels <- trend_data$state_labels
-  # state_labels_check <- trend_check_data$state_labels_check
   label_positions <- trend_data$label_positions
-  # label_positions_check <- trend_check_data$label_positions_check
   pval_text <- trend_data$pval_text
-  # pval_text_check <- trend_check_data$pval_text
   no_check_subset <- trend_data$data
   check_data <- nass_data$plot_data
 
@@ -195,15 +188,6 @@ rebuild_trends_plot_planting <- function(trend_data, nass_data, custom_order = N
 
   meta_reg <- meta_reg %>%
     bind_rows(data.frame(State = missing_states_meta_reg))
-
-  # missing_states_meta_reg_check <- setdiff(ordered_states, unique(meta_reg_check$State))
-
-  # meta_reg_check<-meta_reg_check %>%
-  # bind_rows(data.frame(State = missing_states_meta_reg_check))
-
-  # Plot 1: Trial means
-  # Get trial data for plotting
-  # nocheck_data <- if (!is.null(trend_data$nocheck_data)) trend_data$nocheck_data else data.frame()
 
   # If planting_doy or harvest_doy, convert to date for y axis
   if (response_var %in% c("planting_doy", "harvest_doy")) {
@@ -281,10 +265,9 @@ rebuild_trends_plot_planting <- function(trend_data, nass_data, custom_order = N
       )
   }
 
-  # Return all three plots and the ordered states used
+  # Return the plot and the ordered states used
   return(list(
     trial_plot = trend_plot,
-    # combined_plot = combined_plot#,
     ordered_states = ordered_states
   ))
 }
@@ -308,7 +291,6 @@ rebuild_gain_plot <- function(
   data <- plot_data$data
   state_labels <- plot_data$state_labels
   label_positions <- plot_data$label_positions
-  # ordered_states <- plot_data$ordered_states
   pval_text <- plot_data$pval_text
   response_var <- plot_data$response_var
 
@@ -472,20 +454,9 @@ for (response_var in c(
   check_filename <- all_files[grepl("trend_plot_check.rds$", all_files)]
   env_filename <- all_files[grepl("agronomy_gain_p.rds$", all_files)]
   gen_filename <- all_files[grepl("genetic_gain_p.rds$", all_files)]
-  #
-  #
-  #
-  # trend_data <-file.path(
-  #   "figure_inputs", "oil_yield_lb_acre_trend_plot.rds")
-  # trend_check_data <- file.path(
-  #   "figure_inputs", "oil_yield_lb_acre_trend_plot_check.rds")
 
   trends <- rebuild_trends_plot(trend_filename, check_filename)
 
-  # genetic<-file.path(
-  #   "figure_inputs", "oil_yield_lb_acre_genetic_gain_p.rds")
-  # environment<-file.path(
-  #   "figure_inputs", "oil_yield_lb_acre_agronomy_gain_p.rds")
   gen <- rebuild_gain_plot(gen_filename)
   env <- rebuild_gain_plot(env_filename)
 
@@ -589,7 +560,6 @@ planting_plot <- rebuild_trends_plot_planting(
   nass_inputs
 )
 
-####
 # Convert min_yday to a date for plotting
 nass_inputs$plot_data$val_date <- as.Date(nass_inputs$plot_data$min_yday - 1, origin = "2020-01-01")
 nass_inputs$plot_data <-nass_inputs$plot_data %>%
@@ -700,8 +670,6 @@ harvest_plot <- rebuild_trends_plot_planting(
 
 
 # Set y-axis limits for planting and harvest dates
-
-
 planting_min <- as.Date("2020-05-15")
 planting_max <- as.Date("2020-07-15")
 harvest_min <- as.Date("2020-07-15")
