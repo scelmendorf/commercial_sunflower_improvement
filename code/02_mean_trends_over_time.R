@@ -139,16 +139,6 @@ for (response_var in c("oil_pct","yield_lb_acre","flower_50pct_days_past_plantin
       yi_var = .data[[paste0(response_var, "_mean")]],
       vi_var = (.data[[paste0(response_var, "_se")]])^2
     )
-  
-  #sce just added this
-  # state_cts <-
-  #   trial_means %>%
-  #   select(State, Year) %>%
-  #   distinct() %>%
-  #   group_by(State) %>%
-  #   dplyr::tally()
-  
-  
 
   # test for difference in trends among states
   m1 <- rma.mv(
@@ -256,7 +246,6 @@ anova_trend_results[[response_var]] <- data.frame(
   # Get label positions per state
   # only nec if we free_x the plots
   label_positions <- meta_reg %>%
-    # group_by(State) %>%
     summarise(
       x = min(Year, na.rm = TRUE) + 1,
       y = max(Estimate, na.rm = TRUE)
@@ -430,13 +419,12 @@ anova_trend_results[[response_var]] <- data.frame(
   # Get label positions per state
   # only nec if we free_x the plots
   label_positions_check <- meta_reg_check %>%
-    # group_by(State) %>%
     summarise(
       x = min(Year, na.rm = TRUE) + 1,
       y = max(Estimate, na.rm = TRUE)
     ) 
   # Format nicely
-  pval_text <- paste0("State * Year interaction P = ", round(anova_trend[4, 6], 3))
+  pval_text_check <- paste0("State * Year interaction P = ", round(anova_trend[4, 6], 3))
 
 
   # Define the state order from south to north
@@ -467,21 +455,13 @@ anova_trend_results[[response_var]] <- data.frame(
       title = paste("Meta-Regression of", response_var, "Check Varieties Over Time"),
       subtitle = paste(
         "Per-state predictions with 95% CI and slope",
-        pval_text,
+        pval_text_check,
         sep = "\n"
       ),
       x = "Year",
       y = paste0(response_var, " (checks only)")
     )
-  ### end repeat for checks
 
-  # ggsave(trend_plot_check,
-  #   filename = file.path(
-  #     "temp_plots", "crop_science",
-  #     paste0(response_var, "_trend_plot_check.jpg")
-  #   ), width = 5, height = 10,
-  #   scale = 1.4
-  # )
   Sys.sleep(2)
   
   trend_check_data <-list(
@@ -491,7 +471,7 @@ anova_trend_results[[response_var]] <- data.frame(
   state_labels_check = state_labels_check,
   label_positions_check = label_positions_check,
   response_var = response_var,
-  pval_text = pval_text)
+  pval_text = pval_text_check)
   
   
   write_rds(trend_check_data, file = file.path(
@@ -499,14 +479,6 @@ anova_trend_results[[response_var]] <- data.frame(
     paste0(response_var, "_trend_plot_check.rds")
   ))
 
-
-  # ggsave(trend_plot,
-  #   filename = file.path(
-  #     "temp_plots", "crop_science",
-  #     paste0(response_var, "_trend_plot.jpg")
-  #   ), width = 5, height = 10,
-  #   scale = 1.4
-  # )
 
   write_rds(trend_data, file = file.path(
     "figure_inputs",
@@ -593,41 +565,6 @@ tinytable::save_tt(
 )
 
 
-# library (jpeg)
-# library (grid)
-# library (gridExtra)
-# for (response_var in c(
-#   "oil_pct", "yield_lb_acre", "flower_50pct_days_past_planting",
-#   "oil_yield_lb_acre", "harvest_moisture_pct",
-#   "value_per_acre", "value_generic",
-#   "height_cm", "test_weight_lbs_bushel"
-# )){
-#   plots <- list.files(
-#     file.path("temp_plots", "crop_science"),
-#     pattern = paste0(response_var, ".*\\.jpg$")
-#   )
-#   
-#   
-#   f1<-readJPEG(file.path("temp_plots", "crop_science", plots[1]))
-#   f2<-readJPEG(file.path("temp_plots", "crop_science", plots[2]))
-#   
-#   # Convert to raster grobs
-#   g1 <- rasterGrob(f1, interpolate = TRUE)
-#   g2 <- rasterGrob(f2, interpolate = TRUE)
-#   
-#   # Arrange side by side
-#   jpeg(file.path("temp_plots", "crop_science", "combined_plots",
-#                  paste0(response_var,".jpg")), width = 800, height = 800, quality = 95)
-#   grid.arrange(g1, g2, ncol = 2)
-#   dev.off()
-# }
-#   
-#   library(patchwork)
-#   ylim1 <-ggplot_build(f1)$layout$panel_scales_y[[1]]$range$range
-#   ylim2 <-ggplot_build(f2)$layout$panel_scales_y[[1]]$range$range
-#   mylims <-c(min(c(ylim1, ylim2)), max(c(ylim1, ylim2)))
-#   
-#   combined_plot <- f1+ylim(mylims) | f2+ylim(mylims) 
-# }
+
   
   
