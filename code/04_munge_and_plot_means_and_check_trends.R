@@ -155,10 +155,7 @@ rebuild_trends_plot <- function(
     ordered_states = ordered_states
   ))
 }
-rebuild_trends_plot_planting(
-  trend_filename,
-  nass_inputs
-)
+
 rebuild_trends_plot_planting <- function(trend_data, nass_data, custom_order = NULL) {
   library(ggplot2)
   library(dplyr)
@@ -208,40 +205,81 @@ rebuild_trends_plot_planting <- function(trend_data, nass_data, custom_order = N
   # Get trial data for plotting
   # nocheck_data <- if (!is.null(trend_data$nocheck_data)) trend_data$nocheck_data else data.frame()
 
-  trend_plot <- ggplot(meta_reg, aes(x = Year)) +
-    geom_point(
-      data = no_check_subset,
-      aes(y = .data[[response_var]]),
-      alpha = 0.05
-    ) +
-    # geom_point(aes(y = Estimate), alpha = 0.6) +
-    # geom_errorbar(aes(ymin = Estimate - SE, ymax = Estimate + SE), width = 0.2, alpha = 0.4) +
-    geom_line(aes(y = Predicted, color = colors), size = 1) +
-    geom_ribbon(aes(ymin = CI_low, ymax = CI_up, fill = colors), alpha = 0.2) +
-    scale_color_identity() +
-    scale_fill_identity() +
-    facet_wrap(~ factor(State, levels = rev(ordered_states)), ncol = 1) +
-    theme_minimal(base_size = 14) +
-    geom_label(
-      data = state_labels,
-      aes(x = label_positions$x, y = label_positions$y, label = label),
-      hjust = 0,
-      vjust = 1,
-      size = 3.5,
-      fill = "white",
-      label.size = NA,
-      alpha = 0.7
-    ) +
-    labs(
-      title = paste("Regression of", response_var, "Over Time"),
-      subtitle = paste(
-        "Per-state predictions with 95% CI and slope",
-        pval_text,
-        sep = "\n"
-      ),
-      x = "Year",
-      y = paste0(response_var)
-    )
+  # If planting_doy or harvest_doy, convert to date for y axis
+  if (response_var %in% c("planting_doy", "harvest_doy")) {
+    no_check_subset$y_date <- as.Date(no_check_subset[[response_var]] - 1, origin = "2020-01-01")
+    meta_reg$Predicted_date <- as.Date(meta_reg$Predicted - 1, origin = "2020-01-01")
+    meta_reg$CI_low_date <- as.Date(meta_reg$CI_low - 1, origin = "2020-01-01")
+    meta_reg$CI_up_date <- as.Date(meta_reg$CI_up - 1, origin = "2020-01-01")
+    state_labels$y_date <- as.Date(label_positions$y - 1, origin = "2020-01-01")
+    ylab_str <- ifelse(response_var == "planting_doy", "Planting date", "Harvest date")
+    trend_plot <- ggplot(meta_reg, aes(x = Year)) +
+      geom_point(
+        data = no_check_subset,
+        aes(y = y_date),
+        alpha = 0.05
+      ) +
+      geom_line(aes(y = Predicted_date, color = colors), size = 1) +
+      geom_ribbon(aes(ymin = CI_low_date, ymax = CI_up_date, fill = colors), alpha = 0.2) +
+      scale_color_identity() +
+      scale_fill_identity() +
+  facet_wrap(~ factor(State, levels = rev(c("TX", "KS", "CO", "NE", "SD", "ND"))), ncol = 1) +
+      theme_minimal(base_size = 14) +
+      geom_label(
+        data = state_labels,
+        aes(x = label_positions$x, y = y_date, label = label),
+        hjust = 0,
+        vjust = 1,
+        size = 3.5,
+        fill = "white",
+        label.size = NA,
+        alpha = 0.7
+      ) +
+      scale_y_date(date_labels = "%b-%d") +
+      labs(
+        title = paste("Regression of", response_var, "Over Time"),
+        subtitle = paste(
+          "Per-state predictions with 95% CI and slope",
+          pval_text,
+          sep = "\n"
+        ),
+        x = "Year",
+        y = ylab_str
+      )
+  } else {
+    trend_plot <- ggplot(meta_reg, aes(x = Year)) +
+      geom_point(
+        data = no_check_subset,
+        aes(y = .data[[response_var]]),
+        alpha = 0.05
+      ) +
+      geom_line(aes(y = Predicted, color = colors), size = 1) +
+      geom_ribbon(aes(ymin = CI_low, ymax = CI_up, fill = colors), alpha = 0.2) +
+      scale_color_identity() +
+      scale_fill_identity() +
+  facet_wrap(~ factor(State, levels = rev(c("TX", "KS", "CO", "NE", "SD", "ND"))), ncol = 1) +
+      theme_minimal(base_size = 14) +
+      geom_label(
+        data = state_labels,
+        aes(x = label_positions$x, y = label_positions$y, label = label),
+        hjust = 0,
+        vjust = 1,
+        size = 3.5,
+        fill = "white",
+        label.size = NA,
+        alpha = 0.7
+      ) +
+      labs(
+        title = paste("Regression of", response_var, "Over Time"),
+        subtitle = paste(
+          "Per-state predictions with 95% CI and slope",
+          pval_text,
+          sep = "\n"
+        ),
+        x = "Year",
+        y = paste0(response_var)
+      )
+  }
 
   # Return all three plots and the ordered states used
   return(list(
@@ -468,7 +506,7 @@ for (response_var in c(
         hjust = 0, vjust = 1, size = 3.5,
         fill = "white", label.size = NA, alpha = 0.7
       ) +
-      facet_wrap(~ factor(state_alpha, c(rev(ordered_states))), ncol = 1) +
+      facet_wrap(~ factor(state_alpha, c(rev(nass_inputs$ordered_states))), ncol = 1) +
       scale_color_identity() +
       ggtitle("Yield Trends by State \n Source: USDA - NASS") +
       labs(
@@ -552,12 +590,16 @@ planting_plot <- rebuild_trends_plot_planting(
 )
 
 ####
-
-
+# Convert min_yday to a date for plotting
+nass_inputs$plot_data$val_date <- as.Date(nass_inputs$plot_data$min_yday - 1, origin = "2020-01-01")
+nass_inputs$plot_data <-nass_inputs$plot_data %>%
+  bind_rows(data.frame(state_alpha =
+                         setdiff(planting_plot$trial_plot$data$State, nass_inputs$plot_data$state_alpha),
+            short_desc = "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"))
 
 nass_plot_planting <- ggplot(nass_inputs$plot_data %>%
   filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"), aes(
-  x = as.numeric(year), y = min_yday,
+  x = as.numeric(year), y = val_date,
   group = state_alpha
 )) +
   geom_point() +
@@ -567,22 +609,24 @@ nass_plot_planting <- ggplot(nass_inputs$plot_data %>%
       dplyr::filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"),
     aes(
       x = nass_inputs$label_positions$x[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"],
-      y = nass_inputs$label_positions$y[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"], label = label
+      y = as.Date(nass_inputs$label_positions$y[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"] - 1, origin = "2020-01-01"),
+      label = label
     ),
     hjust = 0, vjust = 1, size = 3.5,
     fill = "white", label.size = NA, alpha = 0.7
   ) +
-  facet_wrap(~ factor(state_alpha, c(rev(ordered_states))), ncol = 1) +
+  facet_wrap(~ factor(state_alpha, c(rev(c("TX", "KS", "CO", "NE", "SD", "ND")))), ncol = 1) +
   scale_color_identity() +
+  scale_y_date(date_labels = "%b-%d") +
   ggtitle("Planting Date Trends by State \n Source: USDA - NASS") +
   labs(
     subtitle = paste(
       "Per-state predictions with 95% CI and slope",
-      pval_text,
+      nass_inputs$pval_text_plant,
       sep = "\n"
     ),
     x = "Year",
-    y = "planting doy"
+    y = "Planting date"
   ) +
   theme_minimal(base_size = 14)
 
@@ -606,9 +650,18 @@ nass_inputs <- readRDS(file.path(
   "figure_inputs", "nass_harvest_trends.rds"
 ))
 
+
+# Convert min_yday to a date for plotting
+nass_inputs$plot_data <-nass_inputs$plot_data %>%
+  #add blank row for NE
+  bind_rows(data.frame(state_alpha =
+                         setdiff(planting_plot$trial_plot$data$State, nass_inputs$plot_data$state_alpha),
+                       short_desc = "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"))
+
+nass_inputs$plot_data$val_date<- as.Date(nass_inputs$plot_data$min_yday - 1, origin = "2020-01-01")
 nass_plot_harvest <- ggplot(nass_inputs$plot_data %>%
   filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"), aes(
-  x = as.numeric(year), y = min_yday,
+  x = as.numeric(year), y = val_date,
   group = state_alpha
 )) +
   geom_point() +
@@ -618,22 +671,24 @@ nass_plot_harvest <- ggplot(nass_inputs$plot_data %>%
       dplyr::filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"),
     aes(
       x = nass_inputs$label_positions$x[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"],
-      y = nass_inputs$label_positions$y[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"], label = label
+      y = as.Date(nass_inputs$label_positions$y[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"] - 1, origin = "2020-01-01"),
+      label = label
     ),
     hjust = 0, vjust = 1, size = 3.5,
     fill = "white", label.size = NA, alpha = 0.7
   ) +
-  facet_wrap(~ factor(state_alpha, c(rev(ordered_states))), ncol = 1) +
+  facet_wrap(~ factor(state_alpha, c(rev(c("TX", "KS", "CO", "NE", "SD", "ND")))), ncol = 1) +
   scale_color_identity() +
+  scale_y_date(date_labels = "%b-%d") +
   ggtitle("Harvest Date Trends by State \n Source: USDA - NASS") +
   labs(
     subtitle = paste(
       "Per-state predictions with 95% CI and slope",
-      pval_text,
+      nass_inputs$pval_text_harv,
       sep = "\n"
     ),
     x = "Year",
-    y = "Harvest doy"
+    y = "Harvest date"
   ) +
   theme_minimal(base_size = 14)
 
@@ -643,15 +698,35 @@ harvest_plot <- rebuild_trends_plot_planting(
   nass_inputs
 )
 
+
+# Set y-axis limits for planting and harvest dates
+
+
+planting_min <- as.Date("2020-05-15")
+planting_max <- as.Date("2020-07-15")
+harvest_min <- as.Date("2020-07-15")
+harvest_max <- as.Date("2020-12-31")
+# Create breaks for 1st of each month for planting and harvest axes
+planting_breaks <- seq(planting_min, planting_max, by = "1 day")
+planting_breaks <- planting_breaks[format(planting_breaks, "%d") == "01"]
+planting_labels <- ifelse(format(planting_breaks, "%b") == "Jan", "", format(planting_breaks, "%b-%d"))
+harvest_breaks <- seq(harvest_min, harvest_max, by = "1 day")
+harvest_breaks <- harvest_breaks[format(harvest_breaks, "%d") == "01"]
+harvest_labels <- ifelse(format(harvest_breaks, "%b") == "Jan", "", format(harvest_breaks, "%b-%d"))
+
 combined_plot <- plot_grid(
   nass_plot_planting +
-    theme(plot.subtitle = element_text(size = 10)) +
-    planting_plot$trial_plot +
+    scale_y_date(limits = c(planting_min, planting_max), breaks = planting_breaks, labels = planting_labels) +
+    theme(plot.subtitle = element_text(size = 10)),
+  planting_plot$trial_plot +
+    scale_y_date(limits = c(planting_min, planting_max), breaks = planting_breaks, labels = planting_labels) +
     ggtitle("Trial Planting") +
     theme(plot.subtitle = element_text(size = 10)),
   nass_plot_harvest +
-    theme(plot.subtitle = element_text(size = 10)) +
-    harvest_plot$trial_plot +
+    scale_y_date(limits = c(harvest_min, harvest_max), breaks = harvest_breaks, labels = harvest_labels) +
+    theme(plot.subtitle = element_text(size = 10)),
+  harvest_plot$trial_plot +
+    scale_y_date(limits = c(harvest_min, harvest_max), breaks = harvest_breaks, labels = harvest_labels) +
     ggtitle("Trial Harvest") +
     theme(plot.subtitle = element_text(size = 10)),
   ncol = 2
@@ -661,5 +736,5 @@ ggsave(
   file.path("figures", paste0("planting_harvest", "_all_trends.jpg")),
   combined_plot,
   width = 15,
-  height = 8
+  height = 9
 )
