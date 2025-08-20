@@ -1,5 +1,9 @@
 #!/usr/bin/env Rscript
 
+# Clean workspace with pacman unload all
+if(!require(pacman)) install.packages("pacman")
+pacman::p_unload(all)
+
 # Code to run Bayesian FW analysis on sunflower data
 # SCE 4 Dec 2024
 # updated 2 April 2025
