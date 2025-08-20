@@ -1,9 +1,14 @@
+# Clean workspace with pacman unload all
+if(!require(pacman)) install.packages("pacman")
+pacman::p_unload(all)
+
 # Load necessary libraries
 library(ggplot2)
 library(dplyr)
 library(maps)
 library(mapdata)
 library(grid)
+library(cowplot)
 
 include_texas <- FALSE
 # Get USA map data
@@ -106,7 +111,7 @@ create_choropleth <- function(mod_data, legend_title = "Change in yield per year
         label = sprintf("%.1f", round(Slope, 1))
       ),
       size = 4
-    ) + # , #fontface = "bold"))+
+    ) + 
     # Set color scale for slope values
     scale_fill_gradient2(
       low = "brown",
@@ -216,9 +221,10 @@ for (response_var in c(
 
 
   # Create plots for each modality
-  nass_plot <- create_choropleth(data[data$mod == "NASS", ]) + theme(legend.position = "none") +
-    ggtitle("Statewide Trends \n(USDA)")
-
+  if (response_var == "yield_lb_acre") {
+    nass_plot <- create_choropleth(data[data$mod == "NASS", ]) + theme(legend.position = "none") +
+      ggtitle("Statewide Trends \n(USDA)")
+  }
 
   agronomy_plot <- create_choropleth(data[data$mod == "agronomy", ]) + theme(legend.position = "none") +
     ggtitle("Agronomy + Climate \n component of \n Trial Trends")
@@ -233,48 +239,39 @@ for (response_var in c(
     tst <- create_choropleth(data[data$mod == "trial_mean", ],
       legend_title = "Change in yield per year \n (lbs/acre)"
     )
-  }
-  if (response_var == "harvest_moisture_pct") {
+  } else if (response_var == "harvest_moisture_pct") {
     tst <- create_choropleth(data[data$mod == "trial_mean", ],
       legend_title = "Change in harvest moisture per year \n (%)"
     )
-  }
-  if (response_var == "height_cm") {
+  } else if (response_var == "height_cm") {
     tst <- create_choropleth(data[data$mod == "trial_mean", ],
       legend_title = "Change in plant height per year \n (cm)"
     )
-  }
-  if (response_var == "mature_doy") {
+  } else if (response_var == "mature_doy") {
     tst <- create_choropleth(data[data$mod == "trial_mean", ],
       legend_title = "Change in maturity date per year \n (day of year)"
     )
-  }
-  if (response_var == "mature_days_past_planting") {
+  } else if (response_var == "mature_days_past_planting") {
     tst <- create_choropleth(data[data$mod == "trial_mean", ],
       legend_title = "Change in relative maturity timing per year \n (days past planting)"
     )
-  }
-  if (response_var == "oil_pct") {
+  } else if (response_var == "oil_pct") {
     tst <- create_choropleth(data[data$mod == "trial_mean", ],
       legend_title = "Change in oil content per year \n (%)"
     )
-  }
-  if (response_var == "oil_yield_lb_acre") {
+  } else if (response_var == "oil_yield_lb_acre") {
     tst <- create_choropleth(data[data$mod == "trial_mean", ],
       legend_title = "Change in oil yield per year \n (lbs/acre)"
     )
-  }
-  if (response_var == "test_weight_lbs_bushel") {
+  } else if (response_var == "test_weight_lbs_bushel") {
     tst <- create_choropleth(data[data$mod == "trial_mean", ],
       legend_title = "Change in test weight per year \n (lb/bushel)"
     )
-  }
-  if (response_var == "value_generic") {
+  } else if (response_var == "value_generic") {
     tst <- create_choropleth(data[data$mod == "trial_mean", ],
       legend_title = "Change value per year \n (unitless)"
     )
-  }
-  if (response_var == "flower_50pct_days_past_planting") {
+  } else if (response_var == "flower_50pct_days_past_planting") {
     tst <- create_choropleth(data[data$mod == "trial_mean", ],
       legend_title = "Change in relative flowering date per year \n (days past planting)"
     )
@@ -305,13 +302,14 @@ for (response_var in c(
 
   if (include_texas) {
     ggsave(final_plot,
-      filename = file.path("figures", paste0(response_var, "slope_map.png")),
-      height = 8, width = 10
+      filename = file.path("figures", paste0(response_var, "_slope_map.png")),
+      height = 8, width = 10, bg = "white"
     )
   } else {
     ggsave(final_plot,
-      filename = file.path("figures", paste0(response_var, "slope_map_no_texas.png")),
-      height = 8, width = 10
+      filename = file.path("figures", paste0(response_var, "_slope_map_no_texas.png")),
+      height = 8, width = 10, bg = "white"
     )
   }
 }
+
