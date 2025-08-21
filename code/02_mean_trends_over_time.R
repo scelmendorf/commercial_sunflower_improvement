@@ -1,7 +1,7 @@
 # calc trends over all homogenized variables
 # SCE 6 March 2025
-# updated 11 April
-# TODO
+# updated 20 Aug 2025
+
 
 # Packages ---------------------------------------------------------------
 pacman::p_unload(all)
@@ -9,13 +9,12 @@ library(tidyverse)
 library(broom.mixed)
 library(effects)
 library(cowplot)
-# run for all states
 library(lme4)
 library(dplyr)
 library(purrr)
 library(ggpmisc)
 library(metafor)
-
+library(merTools)
 
 # if making tinytables html
 require(webshot2)
@@ -354,7 +353,7 @@ anova_trend_results[[response_var]] <- data.frame(
       # Extract relevant stats from summary
       sum_fit <- summary(fit)$coefficients
 
-      library(merTools)
+      # library(merTools) # moved to top of script for clarity and reproducibility
 
       preds <- predictInterval(
         merMod = fit,
@@ -362,7 +361,7 @@ anova_trend_results[[response_var]] <- data.frame(
           data.frame(
             Year = df$Year,
             # pick most common check at that state
-            Unif_Name = names(sort(table(df$Unif_Name)))[length(sort(table(df$Unif_Name)))]
+            Unif_Name = names(which.max(table(df$Unif_Name)))
           ),
         # re.form=NA,
         level = 0.95,
@@ -378,8 +377,8 @@ anova_trend_results[[response_var]] <- data.frame(
       linetype <- ifelse(anova(fit)[1, 6] < 0.05, "solid", "dotted")
 
       color <- case_when(
-        (as.numeric(anova(fit)[1, 6]) < 0.05 & sum_fit["Year", "Estimate"]) > 0 ~ "green",
-        (as.numeric(anova(fit)[1, 6]) < 0.05 & sum_fit["Year", "Estimate"]) < 0 ~ "red",
+        (as.numeric(anova(fit)[1, 6]) < 0.05 & (sum_fit["Year", "Estimate"] > 0)) ~ "green",
+        (as.numeric(anova(fit)[1, 6]) < 0.05 & (sum_fit["Year", "Estimate"] < 0)) ~ "red",
         TRUE ~ "black"
       )
 
@@ -390,8 +389,8 @@ anova_trend_results[[response_var]] <- data.frame(
         Unif_Name = df$Unif_Name,
         Estimate = df[[response_var]],
         Predicted = preds$fit,
-        CI_low = preds$upr,
-        CI_up = preds$lwr,
+        CI_low = preds$lwr,
+        CI_up = preds$upr,
         Slope = sum_fit["Year", "Estimate"],
         pval = anova(fit)[1, 6],
         Slope_SE = sum_fit["Year", "Std. Error"],
@@ -558,7 +557,6 @@ wide_data <- all_trends %>%
 
 tinytable::save_tt(
   tinytable::tt(wide_data, # %>%
-                # mutate(p.value = round(p.value, 3)),
                 digits = 1
   ), "tables/trends_table.html",
   overwrite = TRUE
@@ -566,5 +564,4 @@ tinytable::save_tt(
 
 
 
-  
-  
+
