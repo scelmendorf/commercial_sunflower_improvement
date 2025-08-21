@@ -1,5 +1,9 @@
 #!/usr/bin/env Rscript
 
+# Clean workspace with pacman unload all
+if(!require(pacman)) install.packages("pacman")
+pacman::p_unload(all)
+
 # Code to run Bayesian FW analysis on sunflower data
 # SCE 4 Dec 2024
 # updated 2 April 2025
@@ -21,7 +25,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # Check if help is requested
 if ("--help" %in% args || length(args) == 0) {
-  cat("Usage: Rscript script_name.R --input=<input_file> --output=<output_file> --niter=<niter> --nwarm=<nwarm> --nthin=<nthin> --nchain=<nchain\n")
+  cat("Usage: Rscript script_name.R --input=<input_file> --output=<output_file> --niter=<niter> --nwarm=<nwarm> --nthin=<nthin> --nchain=<nchain>\n")
   cat("Arguments:\n")
   cat("  --input    Path to input data file\n")
   cat("  --output   Path to save results\n")
@@ -80,7 +84,7 @@ cat("Input file:", input_file, "\n")
 cat("Output file:", output_file, "\n")
 cat("NumThin:", numThin, "\n")
 cat("NumIter:", numIter, "\n")
-cat("NumChain", numChain, "\n")
+cat("NumChain:", numChain, "\n")
 
 if (file.exists(output_file)){
   stop ("output file exists and will be overwritten")

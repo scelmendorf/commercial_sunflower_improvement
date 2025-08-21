@@ -4,6 +4,8 @@
 # updated 29 July 2025 for generic plotting
 
 # setup
+if(!require(pacman)) install.packages("pacman")
+pacman::p_unload(all)
 library(rnassqs)
 library(tidyverse)
 library(dplyr)
@@ -27,7 +29,6 @@ for (param in c("PRODUCTION", "YIELD", 'AREA HARVESTED', "AREA PLANTED")) {
     commodity_desc = "SUNFLOWER", # Specifies sunflowers
     statisticcat_desc = param,
     agg_level_desc = "STATE"
-    # year = "2024"           # can subset by year if file size too large
   )
 
 # perform query
@@ -124,11 +125,9 @@ plot_data %>%
 trends_mod <- lm(Value ~ state_name*year, data = plot_data %>%
   mutate(year = as.numeric(year)))
 
-
-pval = round(anova(trends_mod)$`Pr(>F)`[3],3) # p-value for interaction term
-
 pval_text <- paste0("State * Year interaction P = ", 
 round(anova(trends_mod)$`Pr(>F)`[3],3)) # p-value for interaction term
+
 # Step 4: Plot with per-panel color
 yield_plot <- ggplot(plot_data, aes(x = as.numeric(year), y = Value,
                                       group = state_alpha)) +
@@ -148,19 +147,20 @@ yield_plot <- ggplot(plot_data, aes(x = as.numeric(year), y = Value,
         sep = "\n"
       ),
       x = "Year",
-    y = "lb/acre")+
+    y = "lb/acre") +
   theme_minimal(base_size = 14)
 
-# ggsave("temp_plots/crop_science/nass_sunflower_yield_trends_by_state.png",
-#        plot = yield_plot,
-#        width = 10, height = 8, dpi = 300)
+yield_data <-list(
+  plot_data = plot_data,
+  pval_text = pval_text,
+  ordered_states = ordered_states,
+  state_labels = state_labels,
+  label_positions = label_positions)
 
-# write_rds(
-#   yield_plot,
-#   "figure_inputs/nass_sunflower_yield_trends_by_state.rds"
-# )
-
-#sce start HERE, need to make the plot_data right
+write_rds(
+  yield_data,
+  file.path("figure_inputs", "nass_yield_trends.rds")
+)
 # mydat = state_trends %>%
 #   rename(
 #          State = state_alpha,
