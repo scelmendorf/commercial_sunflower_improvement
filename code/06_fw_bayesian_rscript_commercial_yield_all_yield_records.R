@@ -33,7 +33,7 @@ if ("--help" %in% args || length(args) == 0) {
 }
 
 
-# input_file = ""data_derived/sunflower_data_yield_clim_subset.csv"
+# input_file = "data_derived/sunflower_data_yield_clim_subset.csv"
 # output = ~/ORCC/big_bayesian_files/fitted_model_FWHs_gdd_commercial.rds
 
 # to run
