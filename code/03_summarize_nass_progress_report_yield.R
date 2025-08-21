@@ -8,7 +8,6 @@ if(!require(pacman)) install.packages("pacman")
 pacman::p_unload(all)
 library(rnassqs)
 library(tidyverse)
-library(dplyr)
 library(ggplot2)
 library(broom)
 
@@ -161,25 +160,6 @@ write_rds(
   yield_data,
   file.path("figure_inputs", "nass_yield_trends.rds")
 )
-# mydat = state_trends %>%
-#   rename(
-#          State = state_alpha,
-#          Slope = slope,
-#          Slope_SE = se) %>%
-#   select(-color)
 
-
-yield_data <-list(
-  plot_data = plot_data,
-  #data = mydat,
-  pval_text = pval_text,
-  ordered_states = ordered_states,
-  state_labels = state_labels,
-  label_positions = label_positions)
-
-write_rds(
-  yield_data,
-  file.path("figure_inputs", "nass_yield_trends.rds")
-)
 
 
