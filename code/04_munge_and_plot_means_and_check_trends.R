@@ -388,7 +388,7 @@ rebuild_gain_plot <- function(
     }
 
     # Combine the real data with the dummy data
-    data <- rbind(data, dummy_data)
+    data <- bind_rows(data, dummy_data)
   }
 
   # Create the new plot using ggplot from scratch to avoid layer conflicts
@@ -473,7 +473,8 @@ for (response_var in c(
       geom_smooth(method = "lm", aes(color = color), se = TRUE) +
       geom_label(
         data = nass_inputs$state_labels,
-        aes(x = label_positions$x, y = label_positions$y, label = label),
+        aes(x = rep(nass_inputs$label_positions$x, nrow (nass_inputs$state_labels)),
+            y = rep(nass_inputs$label_positions$y,nrow (nass_inputs$state_labels)), label = label),
         hjust = 0, vjust = 1, size = 3.5,
         fill = "white", label.size = NA, alpha = 0.7
       ) +
@@ -575,11 +576,14 @@ nass_plot_planting <- ggplot(nass_inputs$plot_data %>%
   geom_point() +
   geom_smooth(method = "lm", aes(color = color), se = TRUE) +
   geom_label(
-    data = nass_inputs$state_labels %>%
-      dplyr::filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"),
+    data = left_join(
+      nass_inputs$state_labels %>% filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"),
+      nass_inputs$label_positions %>% filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"),
+      by = "state_alpha"
+    ),
     aes(
-      x = nass_inputs$label_positions$x[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"],
-      y = as.Date(nass_inputs$label_positions$y[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"] - 1, origin = "2020-01-01"),
+      x = x, 
+      y = as.Date(y - 1, origin = "2020-01-01"),
       label = label
     ),
     hjust = 0, vjust = 1, size = 3.5,
@@ -608,10 +612,6 @@ all_files <- list.files(
   pattern = response_var,
   full.names = TRUE
 )
-all_files <- all_files[grepl("rds", all_files)]
-if (response_var == "yield_lb_acre") {
-  all_files <- all_files[!grepl("oil", all_files)]
-}
 
 trend_filename <- all_files[grepl("trend_plot.rds$", all_files)]
 
@@ -637,11 +637,14 @@ nass_plot_harvest <- ggplot(nass_inputs$plot_data %>%
   geom_point() +
   geom_smooth(method = "lm", aes(color = color), se = TRUE) +
   geom_label(
-    data = nass_inputs$state_labels %>%
-      dplyr::filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"),
+    data = left_join(
+      nass_inputs$state_labels %>% filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"),
+      nass_inputs$label_positions %>% filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"),
+      by = "state_alpha"
+    ),
     aes(
-      x = nass_inputs$label_positions$x[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"],
-      y = as.Date(nass_inputs$label_positions$y[nass_inputs$label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"] - 1, origin = "2020-01-01"),
+      x = x,
+      y = as.Date(y - 1, origin = "2020-01-01"),
       label = label
     ),
     hjust = 0, vjust = 1, size = 3.5,
@@ -675,11 +678,9 @@ planting_max <- as.Date("2020-07-15")
 harvest_min <- as.Date("2020-07-15")
 harvest_max <- as.Date("2020-12-31")
 # Create breaks for 1st of each month for planting and harvest axes
-planting_breaks <- seq(planting_min, planting_max, by = "1 day")
-planting_breaks <- planting_breaks[format(planting_breaks, "%d") == "01"]
+planting_breaks <- seq(planting_min, planting_max, by = "month")
 planting_labels <- ifelse(format(planting_breaks, "%b") == "Jan", "", format(planting_breaks, "%b-%d"))
-harvest_breaks <- seq(harvest_min, harvest_max, by = "1 day")
-harvest_breaks <- harvest_breaks[format(harvest_breaks, "%d") == "01"]
+harvest_breaks <- seq(harvest_min, harvest_max, by = "month")
 harvest_labels <- ifelse(format(harvest_breaks, "%b") == "Jan", "", format(harvest_breaks, "%b-%d"))
 
 combined_plot <- plot_grid(
@@ -697,7 +698,7 @@ combined_plot <- plot_grid(
     scale_y_date(limits = c(harvest_min, harvest_max), breaks = harvest_breaks, labels = harvest_labels) +
     ggtitle("Trial Harvest") +
     theme(plot.subtitle = element_text(size = 10)),
-  ncol = 2
+  ncol = 4
 )
 
 ggsave(
