@@ -8,17 +8,8 @@ library(rnassqs)
 library(tidyverse)
 library(zoo)
 
-
-# if using this set your own paths after requesting your
-# own key and add it to the .gitignore
-# get an nass key from here https://quickstats.nass.usda.gov/api/
-if (file.exists("api_key/sce_nass_key.txt")) {
-  api_key <- readLines("api_key/sce_nass_key.txt")
-} else {
-  cat("must first generate a NASS key")
-}
-
-
+# See script 3 on how to set up your API key
+api_key <- Sys.getenv("NASS_API_KEY")
 nassqs_auth(key = api_key)
 
 # general useful stuff poking around NASS
@@ -357,7 +348,6 @@ planting_data <-list(
 
 harvest_data <-list(
   plot_data = plot_data,
-  #data = mydat,
   pval_text_harv = pval_text_harv,
   ordered_states = ordered_states,
   state_labels = state_labels,

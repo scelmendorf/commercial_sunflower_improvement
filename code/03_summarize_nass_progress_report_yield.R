@@ -15,7 +15,12 @@ library(broom)
 # if using this set your own paths after requesting your
 # own key and add it to the .gitignore
 # get an nass key from here https://quickstats.nass.usda.gov/api/
-api_key <- readLines("api_key/sce_nass_key.txt")
+# addi it to your enviroment by editing your environment here
+# usethis::edit_r_environ()
+# type in a line that looks like NASS_API_KEY='XXXXXXX-XXXX-XXXX-ETC'
+# verify it works by running this line
+# Sys.getenv("NASS_API_KEY")
+api_key <- Sys.getenv("NASS_API_KEY")
 nassqs_auth(key = api_key)
 
 # grab everything you can that might be useful
