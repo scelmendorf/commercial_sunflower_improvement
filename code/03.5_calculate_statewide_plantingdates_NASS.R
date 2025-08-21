@@ -97,7 +97,7 @@ doy_interp <- sunflower %>%
   mutate(
     Value = na.approx(Value, na.rm = FALSE),
     # Maintain other key columns (adjust as needed for your actual data)
-    year = year(date)
+    year = lubridate::year(date)
   ) %>%
   # Keep only the columns you need
   select(location_desc, date, Value, year, short_desc)
@@ -110,7 +110,7 @@ doy_50_interp <- doy_interp %>%
   summarize(min_yday = min(yday), .groups = "drop")
 
 # remove a few obvious errors for harvest
-doy_50_interp = doy_50_interp %>%
+doy_50_interp <- doy_50_interp %>%
   filter(!(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED" & min_yday<100))
 
 
@@ -154,7 +154,7 @@ doy_50 <- sunflower %>%
   filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED") %>%
   filter(Value > 50) %>%
   group_by(location_desc, year) %>%
-  summarize(min_yday = min(yday(week_ending)))
+  summarize(min_yday = min(lubridate::yday(week_ending)))
 
 all_yrs <- doy_50 %>%
   pivot_wider(., names_from = location_desc, values_from = min_yday) %>%
@@ -240,10 +240,13 @@ plot_data <- plot_data %>%
 
 # One row per state for annotation
 state_labels <- state_trends %>%
+  filter(short_desc %in% c("SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED",
+                          "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED")) %>%
   group_by(state_alpha, short_desc) %>%
   summarise(
     Slope = unique(slope),
-    pval = unique(pval)
+    pval = unique(pval),
+    .groups = "drop"
   ) %>%
   mutate(
     label = paste0("Slope = ", round(Slope, 2), 
@@ -253,12 +256,12 @@ state_labels <- state_trends %>%
 
 
 # Get label positions per state
-# only nec if we free_x the plots
 label_positions <- plot_data %>%
-  group_by(short_desc) %>%
+  group_by(state_alpha, short_desc) %>%
   summarise(
     x = min(as.numeric(year), na.rm = TRUE) + 1,
-    y = max(min_yday, na.rm = TRUE)
+    y = max(min_yday, na.rm = TRUE),
+    .groups = "drop"
   ) 
 
 # figure out date range
@@ -283,12 +286,16 @@ planting_plot <- ggplot(plot_data %>%
                                     group = state_alpha)) +
   geom_point() +
   geom_smooth(method = "lm", aes(color = color), se = TRUE) +
-  geom_label(data = state_labels %>%
-               dplyr::filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"),
-             aes(x = label_positions$x[label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"],
-                 y = label_positions$y[label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"], label = label),
-             hjust = 0, vjust = 1, size = 3.5,
-             fill = "white", label.size = NA, alpha = 0.7) +
+  geom_label(
+    data = left_join(
+      state_labels %>% filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"),
+      label_positions %>% filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT PLANTED"),
+      by = "state_alpha"
+    ),
+    aes(x = x, y = y, label = label),
+    hjust = 0, vjust = 1, size = 3.5,
+    fill = "white", label.size = NA, alpha = 0.7
+  ) +
   facet_wrap(~factor(state_alpha, c(rev(ordered_states))), ncol = 1) +
   scale_color_identity() +
   ggtitle("Planting Date Trends by State \n Source: USDA - NASS") +
@@ -317,12 +324,16 @@ harvest_plot <- ggplot(plot_data %>%
                                                                                                     group = state_alpha)) +
   geom_point() +
   geom_smooth(method = "lm", aes(color = color), se = TRUE) +
-  geom_label(data = state_labels %>%
-               dplyr::filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"),
-             aes(x = label_positions$x[label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"],
-                 y = label_positions$y[label_positions$short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"], label = label),
-             hjust = 0, vjust = 1, size = 3.5,
-             fill = "white", label.size = NA, alpha = 0.7) +
+  geom_label(
+    data = left_join(
+      state_labels %>% filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"),
+      label_positions %>% filter(short_desc == "SUNFLOWER - PROGRESS, MEASURED IN PCT HARVESTED"),
+      by = "state_alpha"
+    ),
+    aes(x = x, y = y, label = label),
+    hjust = 0, vjust = 1, size = 3.5,
+    fill = "white", label.size = NA, alpha = 0.7
+  ) +
   facet_wrap(~factor(state_alpha, c(rev(ordered_states))), ncol = 1) +
   scale_color_identity() +
   ggtitle("Harvest Date Trends by State \n Source: USDA - NASS") +
