@@ -52,8 +52,6 @@ commercial_sunflower_improvement/
 ├── figure_inputs/                              # Intermediate analysis results
 ├── figures/                                    # Final publication figures
 ├── tables/                                     # Summary tables and results
-└── api_key/                                    # NASS API authentication
-    └── sce_nass_key.txt                        # Add yours here
 ```
 
 ### Analysis Workflow
