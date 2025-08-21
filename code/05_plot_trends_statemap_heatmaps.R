@@ -94,20 +94,18 @@ create_choropleth <- function(mod_data, legend_title = "Change in yield per year
       size = ifelse(map_data$significant, 1.2, 0.5)
     ) +
     # Add slope values as text labels
-    # geom_text(data = aggregate(cbind(long, lat) ~ region, map_data, FUN = mean),
-    #           aes(x = long, y = lat,
-    #               label = sprintf("%.1f", round(map_data$Slope[match(region, map_data$region)], 1))),
-    #           size = 3.5, fontface = "bold",
-    #           color = ifelse(abs(map_data$Slope[match(aggregate(cbind(long, lat) ~ region,
-    #                                                             map_data, FUN = mean)$region,
-    #                                                   map_data$region)]) > 15, "white", "black")) +
     geom_text(
       data = map_data %>%
-        dplyr::select(Slope, long.centroid, lat.centroid) %>%
+        group_by(region, State) %>%
+        summarise(
+          long.centroid = mean(long.centroid),
+          lat.centroid = mean(lat.centroid),
+          Slope = mean(Slope),
+          .groups = "drop"
+        ) %>%
         distinct(),
       aes(
         x = long.centroid, y = lat.centroid,
-        # label = round(Slope,2),
         label = sprintf("%.1f", round(Slope, 1))
       ),
       size = 4
@@ -150,7 +148,7 @@ for (response_var in c(
   cat(response_var)
 
   csvs <- list.files("figure_inputs", pattern = "csv")
-  csvs <- grep(csvs, pattern = response_var, value = TRUE) # get just reponse var
+  csvs <- grep(pattern = response_var, x = csvs, value = TRUE) # get just reponse var
   csvs <- grep(csvs,
     pattern = "table.csv", value = TRUE,
     invert = TRUE
@@ -193,16 +191,15 @@ for (response_var in c(
 
   data <- both_sets
   # Join full state names to our data
-  data <- merge(data, state_mapping, by = "State") %>%
-    left_join(., centroids, by = "State")
+  data <- data %>%
+    left_join(state_mapping, by = "State") %>%
+    left_join(centroids, by = "State")
 
   # Define significance
   data$significant <- data$pval < 0.05
 
-  if (!include_texas) {
-    remove_me <- data %>%
-      filter(State == "TX" & mod != "NASS")
     data <- data %>%
+      filter(!(State == "TX" & mod != "NASS"))
       anti_join(., remove_me)
   }
 
