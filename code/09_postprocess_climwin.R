@@ -1,23 +1,9 @@
-library (tidyverse)
-library (lme4)
-library (modelbased)
-library (ggpubr)
+# Load required libraries
+library(tidyverse)
+library(lme4)
+library(modelbased)
+library(ggpubr)
 library(marginaleffects)
-
-
-#bash_args <-c(
-# "--daymet_path", "~/ORCC/climate_files/daymet_timeseries_cleaned.csv" ,
-# "--stanfit_path", "~/ORCC/big_bayesian_files/fitted_model_FWHs_commercial_yield_all_yield_newtest.rds",
-# "--tx_filter", "exclude",
-# "--analysis_type", "fixef",
-# "--pval_metric", "C",
-# "--nrepeats", "10",
-# "--delta_aic_threshold", "-5.0",
-# "--outfile_base", "sunflower_climate_fixef_noTX",
-# "--sunflower_data_path", "scripts/misc_sce_scripsts/testing_pubversion/sunflower_data_yield_clim_subset.csv")
-# 
-
-#args <- parser$parse_args(bash_args)
 envt_quality_fixef_noTX <- readRDS('figure_inputs/sunflower_climate_fixef_noTX_final.rds')
 envt_quality_fixef_noTX_noYr <- readRDS('figure_inputs/sunflower_climate_fixef_noTX_noYr_final.rds')
 envt_quality_fixef_includeTX <- readRDS('figure_inputs/sunflower_climate_fixef_withTX_final.rds')
@@ -28,116 +14,17 @@ envt_quality_ranef_noTX_noYr <- readRDS('figure_inputs/sunflower_climate_ranef_n
 envt_quality_ranef_includeTX <- readRDS('figure_inputs/sunflower_climate_ranef_withTX_final.rds')
 envt_quality_ranef_includeTX_noYr <- readRDS('figure_inputs/sunflower_climate_ranef_withTX_noYr_final.rds')
 
-# see if we can remake meanT
-#0.8753394
-# envt_quality_ranef_noTX$param_thetas$signal1[envt_quality_ranef_noTX$param_thetas$trial_id == 'Eureka_2006']
-# #152
-# envt_quality_ranef_noTX$param_thetas$planting_doy[envt_quality_ranef_noTX$param_thetas$trial_id == 'Eureka_2006']
-# 
-# tst<- day_sub %>% filter(trial_id=='Eureka_2006') %>%
-#   ungroup() %>%
-#   mutate(week = round((yday-152+1)/7)) %>%
-#   filter(week %in% c(-1:19)) %>%
-#   summarize(tmax = mean (tmaxdegc))
+# Load pre-computed climate model results
 
-# for a planting_doy of 152
-# a -1, 19 range would be
-# days 141-287
-
-
-#0.8753394 is the actual tmax (scaled)
-
-
-# figure out the number of terms and their form from the $mod_sel argument and then write a 
-# model. each signal corresponds to one row (in order) in the envt_quality_xxx$mod_sel object
-# if ranef, run as lmer with random effect of (1|county_state)
-# if fixef, run as lm with fixed effect of county_state
-# if no_Yr, include no other terms other than the signals
-# if not no_Yar, include year_centered in the model
-# example below would be for a random effects model, with y terms in mod_sel
-# terms 1-3, 5-6 are quadratic, terms 1 and 7 are linear.
-# c
-# envt_quality_ranef_noTX$mod_sel
-# 
-# # ranefs
-# 
-# # rerun the final model
-# mymod <- lmer(theta ~ year_centered+
-#                 #tmax
-#                 signal1 + I(signal1^2) +
-#                 signal2 + I(signal2^2) +  
-#                 signal3 + I(signal3^2) +  
-#                 signal4 +
-#                 signal5 + I(signal5^2) + 
-#                 signal6 + I(signal6^2) +
-#                 signal7 +
-#                 (1|county_state),
-#               data = envt_quality$param_thetas,
-#               REML = FALSE)
-# 
-# fixed_effects <- fixef(mymod)
-# 
-# results_df <- data.frame(
-#   Parameter = names(fixed_effects),
-#   Scaled_Coefficient = fixed_effects
-# )
-# 
-# climwin_results <- envt_quality$mod_sel %>%
-#   mutate(Parameter = paste0('signal', row.names(.))
-#   )
-# 
-# climwin_results_quad <- envt_quality$mod_sel %>%
-#   mutate(Parameter = paste0('I(signal', row.names(.),'^2)')
-#   ) %>%
-#   bind_rows(., climwin_results)
-# 
-# 
-# results_df <- results_df %>%
-#   #map to terms
-#   left_join(., climwin_results_quad) %>%
-#   # signal1 tmas
-#   mutate(
-#     Std_Dev =
-#       case_when(
-#         grepl("signal1|signal6", Parameter) ~
-#           envt_quality$scaling_factors$tmaxdegc$sd,
-#         grepl("signal2", Parameter) ~
-#           envt_quality$scaling_factors$meanT$sd,
-#         grepl("signal3", Parameter) ~
-#           envt_quality$scaling_factors$GDD_modave$sd,
-#         grepl("signal4|signal5", Parameter) ~
-#           envt_quality$scaling_factors$vpd_tmax_kpa$sd,
-#         grepl("signal7", Parameter) ~
-#           envt_quality$scaling_factors$prcpmmday$sd,
-#         TRUE ~ NA
-#       ),
-#     # signal1 tmas
-#     mean_val =
-#       case_when(
-#         grepl("signal1|signal6", Parameter) ~
-#           envt_quality$scaling_factors$tmaxdegc$mean,
-#         grepl("signal2", Parameter) ~
-#           envt_quality$scaling_factors$meanT$mean,
-#         grepl("signal3", Parameter) ~
-#           envt_quality$scaling_factors$GDD_modave$mean,
-#         grepl("signal4|signal5", Parameter) ~
-#           envt_quality$scaling_factors$vpd_tmax_kpa$mean,
-#         grepl("signal7", Parameter) ~
-#           envt_quality$scaling_factors$prcpmmday$mean,
-#         TRUE ~ NA
-#       ))
-
-#config$data, 
-#config$model_type, 
-#config$include_year
-
-#envt_quality = config$data
-# Function to build and run model based on mod_sel structure
+#' Build and run climwin model based on mod_sel structure
+#' 
+#' @param envt_quality List containing mod_sel and param_thetas data
+#' @param model_type Character string, either "ranef" (mixed model) or "fixef" (fixed effects)
+#' @param include_year Logical, whether to include year_centered in model
+#' @return Fitted model object (lmer or lm)
 run_climwin_model <- function(envt_quality, model_type = "ranef", include_year = TRUE) {
   
   # Get mod_sel data
-  
-  #GGally::ggpairs(envt_quality$param_thetas %>%select(starts_with('signal')))
   
   mod_sel <- envt_quality$mod_sel
   n_terms <- nrow(mod_sel)
@@ -177,36 +64,73 @@ run_climwin_model <- function(envt_quality, model_type = "ranef", include_year =
   return(mymod)
 }
 
-# with planting doy 152, the and a weeks of -1
-# # the start is -7-4 == 11 days earlier
-# # and the end is 19*7+2 == 136 days later
-# 141 287
-
-#empirically backed out how climwin calcs weeks
+#' Convert weeks to year days for climate window analysis
+#' 
+#' @param wk Numeric vector of week values
+#' @return List with min_yday and max_yday components
 weeks_to_ydays <- function(wk) {
-  max_ydays = (-1*wk*7+2)
-  min_ydays <- (-7*wk-4)
-  #max_ydays <- (weeks-1) + 0.5) * 7
+  max_ydays <- (-1 * wk * 7 + 2)
+  min_ydays <- (-7 * wk - 4)
   
   return(list(
-    #center_yday = center_ydays,
     min_yday = ceiling(min_ydays),
     max_yday = floor(max_ydays)
   ))
 }
 
-# model_result <- run_climwin_model(
-#   config$data, 
-#   config$model_type, 
-#   config$include_year
-# ) %>%
-#   process_model_results(., config$data)
+#' Get climate scaling information and axis labels
+#' 
+#' @param climate_var Character string indicating climate variable type
+#' @param envt_quality List containing scaling_factors data
+#' @return List with sd_val, mean_val, and xaxis_title components
+get_climate_scale_info <- function(climate_var, envt_quality) {
+  sd_val <- case_when(
+    grepl("tmax_mod", climate_var) ~ envt_quality$scaling_factors$tmaxdegc$sd,
+    grepl("vpd_mod", climate_var) ~ envt_quality$scaling_factors$vpd_tmax_kpa$sd,
+    grepl("photo_mod", climate_var) ~ envt_quality$scaling_factors$daylh$sd,
+    grepl("GDD_mod", climate_var) ~ envt_quality$scaling_factors$GDD_modave$sd,
+    grepl("temp_mod", climate_var) ~ envt_quality$scaling_factors$meanT$sd,
+    grepl("precip_mod", climate_var) ~ envt_quality$scaling_factors$prcpmmday$sd,
+    grepl("solrad_mod", climate_var) ~ envt_quality$scaling_factors$sradWm2$sd,
+    grepl("nightT_mod", climate_var) ~ envt_quality$scaling_factors$tmindegc$sd,
+    TRUE ~ NaN
+  )
+  
+  mean_val <- case_when(
+    grepl("tmax_mod", climate_var) ~ envt_quality$scaling_factors$tmaxdegc$mean,
+    grepl("vpd_mod", climate_var) ~ envt_quality$scaling_factors$vpd_tmax_kpa$mean,
+    grepl("photo_mod", climate_var) ~ envt_quality$scaling_factors$daylh$mean,
+    grepl("GDD_mod", climate_var) ~ envt_quality$scaling_factors$GDD_modave$mean,
+    grepl("temp_mod", climate_var) ~ envt_quality$scaling_factors$meanT$mean,
+    grepl("precip_mod", climate_var) ~ envt_quality$scaling_factors$prcpmmday$mean,
+    grepl("solrad_mod", climate_var) ~ envt_quality$scaling_factors$sradWm2$mean,
+    grepl("nightT_mod", climate_var) ~ envt_quality$scaling_factors$tmindegc$mean,
+    TRUE ~ NaN
+  )
+  
+  xaxis_title <- case_when(
+    grepl("tmax_mod", climate_var) ~ 'max temperature (°C)',
+    grepl("vpd_mod", climate_var) ~ 'vapor pressure deficit (kPa)',
+    grepl("photo_mod", climate_var) ~ 'photoperiod (hours)',
+    grepl("GDD_mod", climate_var) ~ 'mean growing degree day (°C)',
+    grepl("solrad_mod", climate_var) ~ 'mean solar radiation (W m^-2 day^-1)',
+    grepl("precip_mod", climate_var) ~ 'mean precipitation (mm d^-1)',
+    grepl("temp_mod", climate_var) ~ 'mean temperature (°C)',
+    grepl("nightT_mod", climate_var) ~ 'min temperature (°C)',
+    TRUE ~ NA
+  )
+  
+  return(list(sd_val = sd_val, mean_val = mean_val, xaxis_title = xaxis_title))
+}
 
-#mymod <-model_result
-#envt_quality = config$data
-# Function to extract and process results
+#' Extract and process model results with visualizations
+#' 
+#' @param mymod Fitted model object (lmer or lm)
+#' @param envt_quality List containing mod_sel and scaling data
+#' @return List with model, results dataframe, and signal_plots
 process_model_results <- function(mymod, envt_quality) {
-  if(class(mymod)[1] == "lmerMod") {
+  # Extract model coefficients based on model type
+  if (class(mymod)[1] == "lmerMod") {
     results_df <- broom.mixed::tidy(mymod, effects = "fixed") %>%
       dplyr::select(term, estimate, std.error) %>%
       dplyr::rename(Parameter = term, Scaled_Coefficient = estimate, Std_Err = std.error)
@@ -216,94 +140,53 @@ process_model_results <- function(mymod, envt_quality) {
       dplyr::rename(Parameter = term, Scaled_Coefficient = estimate, Std_Err = std.error)
   }
   
-  #this code is for plotting the estimated means
-  #return one plot for each signal_term.
-  # back-transform the 
-  # Create a list to hold plots for each signal
+  # Create marginal effects plots for each climate signal
   signal_plots <- list()
   
-  # Extract number of signals from the model terms
-  #model_terms <- names(fixef(mymod))
-  #signal_terms <- model_terms[grep("^signal", model_terms)]
+  # Extract signal terms from model results
   signal_terms <- results_df$Parameter[grep("^signal", results_df$Parameter)]
   unique_signals <- unique(gsub("\\^2\\)$", "", gsub("I\\(signal", "signal", signal_terms)))
   
   climwin_results <- envt_quality$mod_sel %>%
-    mutate(Parameter = paste0('signal', row.names(.))
-    )
-  
-  
-  #     climwin_results_quad <- envt_quality$mod_sel %>%
-  #       mutate(Parameter = paste0('I(signal', row.names(.),'^2)')
-  #       ) %>%
-  #       bind_rows(., climwin_results)
+    mutate(Parameter = paste0('signal', row_number()))
   
   # Loop through each signal and create a plot
-  for(signal in unique_signals) {
+  for (signal in unique_signals) {
     # Get the back-transformation values from the results that will be created
     signal_info <- climwin_results %>%
-      filter(Parameter == signal) #%>%
-    #left_join(climwin_results_quad, by = c("climate", "WindowOpen", "WindowClose", "mod", "func"))
+      filter(Parameter == signal)
     
     # Extract the original scale info for this signal
     climate_var <- signal_info$mod[1]
-    sd_val <- case_when(
-      grepl("tmax_mod", climate_var) ~ envt_quality$scaling_factors$tmaxdegc$sd,
-      grepl("vpd_mod", climate_var) ~ envt_quality$scaling_factors$vpd_tmax_kpa$sd,
-      grepl("photo_mod", climate_var) ~ envt_quality$scaling_factors$daylh$sd,
-      grepl("GDD_mod", climate_var) ~ envt_quality$scaling_factors$GDD_modave$sd,
-      grepl("temp_mod", climate_var) ~ envt_quality$scaling_factors$meanT$sd,
-      grepl("precip_mod", climate_var) ~ envt_quality$scaling_factors$prcpmmday$sd,
-      grepl("solrad_mod", climate_var) ~ envt_quality$scaling_factors$sradWm2$sd,
-      grepl("nightT_mod", climate_var) ~ envt_quality$scaling_factors$tmindegc$sd,
-      TRUE ~ NaN
-    )
     
-    mean_val <- case_when(
-      grepl("tmax_mod", climate_var) ~ envt_quality$scaling_factors$tmaxdegc$mean,
-      grepl("vpd_mod", climate_var) ~ envt_quality$scaling_factors$vpd_tmax_kpa$mean,
-      grepl("photo_mod", climate_var) ~ envt_quality$scaling_factors$daylh$mean,
-      grepl("GDD_mod", climate_var) ~ envt_quality$scaling_factors$GDD_modave$mean,
-      grepl("temp_mod", climate_var) ~ envt_quality$scaling_factors$meanT$mean,
-      grepl("precip_mod", climate_var) ~ envt_quality$scaling_factors$prcpmmday$mean,
-      grepl("solrad_mod", climate_var) ~ envt_quality$scaling_factors$sradWm2$mean,
-      grepl("nightT_mod", climate_var) ~ envt_quality$scaling_factors$tmindegc$mean,
-      TRUE ~ NaN
-    )
+    # Get scaling factors and axis labels
+    scale_info <- get_climate_scale_info(climate_var, envt_quality)
+    sd_val <- scale_info$sd_val
+    mean_val <- scale_info$mean_val
+    xaxis_title <- scale_info$xaxis_title
     
-    xaxis_title <- case_when(
-      grepl("tmax_mod", climate_var) ~ 'max temperature (°C)',
-      grepl("vpd_mod", climate_var) ~ 'vapor pressure deficit (kPa)',
-      grepl("photo_mod", climate_var) ~ 'photoperiod (hours)',
-      grepl("GDD_mod", climate_var) ~ 'mean growing degree day (°C)',
-      grepl("solrad_mod", climate_var) ~ 'mean solar radiation (W m^-2 day^-1)',
-      grepl("precip_mod", climate_var) ~ 'mean precipitation (mm d^-1)',
-      grepl("temp_mod", climate_var) ~ 'mean temperature (°C)',
-      grepl("nightT_mod", climate_var) ~ 'min temperature (°C)',
-      TRUE ~ NA
-    )
+    sig <- ifelse(signal_info$pval < 0.05, "sign", "non")
     
-    sig = ifelse(signal_info$pval<0.05, "sign", "non")
-    
-    # Create a plot with back-transformed x-axis
+    # Create marginal effects plot with back-transformed x-axis
     plt <- estimate_means(mymod, c(signal)) %>%
-      mutate(original_scale = get(signal) * sd_val + mean_val,
-             sig = sig) %>%
+      mutate(
+        original_scale = get(signal) * sd_val + mean_val,
+        sig = sig
+      ) %>%
       ggplot(aes(x = original_scale, y = Mean)) +
       geom_line(aes(linetype = sig)) +
       scale_linetype_manual(values = c("sign" = "solid", "non" = "dashed")) +
-      #remove linetype legend
-      guides(linetype = "none") +
+      guides(linetype = "none") +  # Remove linetype legend
       geom_ribbon(aes(ymin = CI_low, ymax = CI_high), alpha = 0.2) +
       labs(
         x = xaxis_title,
         y = "Effect on Environmental Quality"
       ) +
-      theme_bw()+
+      theme_bw() +
       theme(axis.title.y = element_blank())
     
-    # Add points with original data if available
-    if(signal %in% names(envt_quality$param_thetas)) {
+    # Add original data points if available
+    if (signal %in% names(envt_quality$param_thetas)) {
       plt <- plt + 
         geom_point(
           data = envt_quality$param_thetas %>% 
@@ -313,32 +196,28 @@ process_model_results <- function(mymod, envt_quality) {
         )
     }
     
+    # Create timeline inset plot
     inset_plot <- ggplot() +
-      
-      # Light grey line for full range (-28 to 140)
-      # geom_segment(aes(x = -28, xend = 140, y = 0, yend = 0), 
-      #              color = "lightgrey", size = 4) +
       geom_segment(aes(x = -4, xend = 0, y = 0, yend = 0), 
-                   color = '#156082', linewidth =2) +
+                   color = '#156082', linewidth = 2) +
       geom_segment(aes(x = 0, xend = 20, y = 0, yend = 0), 
-                   color = "#47D45A", linewidth =2) +
-      # Dark grey line for the specific range
-      geom_segment(aes(x = (-1*signal_info$WindowOpen)-.5, 
-                       xend = -1*signal_info$WindowClose+.5, 
+                   color = "#47D45A", linewidth = 2) +
+      # Highlight the specific window for this signal
+      geom_segment(aes(x = (-1 * signal_info$WindowOpen) - 0.5, 
+                       xend = -1 * signal_info$WindowClose + 0.5, 
                        y = 0, yend = 0), 
-                   color = "red", linewidth =2) +
-      #geom_vline(aes(xintercept = 0), color = "black", size = 1) +
+                   color = "red", linewidth = 2) +
       scale_y_continuous(limits = c(-0.5, 0.5), expand = c(0, 0)) +
       theme_void()
     
+    # Position the inset plot
     x_range <- range(plt$data$original_scale, na.rm = TRUE)
     y_range <- range(envt_quality$param_thetas$theta, na.rm = TRUE)
-    #Sys.sleep(1)
-    # Position the inset in the upper right corner
+    
     inset_width <- diff(x_range) * 0.4
     inset_height <- diff(y_range) * 0.1
     
-    plt <-plt +
+    plt <- plt +
       annotation_custom(
         grob = ggplotGrob(inset_plot),
         xmin = x_range[2] - inset_width,
@@ -353,38 +232,18 @@ process_model_results <- function(mymod, envt_quality) {
   # Create climwin results mapping
   climwin_results <- envt_quality$mod_sel %>%
     mutate(Parameter = paste0('signal', row_number()))
-  
+
   climwin_results_quad <- envt_quality$mod_sel %>%
-    mutate(Parameter = paste0('I(signal', row_number(),'^2)')) %>%
+    mutate(Parameter = paste0('I(signal', row_number(), '^2)')) %>%
     bind_rows(climwin_results, .)
-  
-  #results_df
-  results_df<- results_df %>%
+
+  # Map results to climate variables and scaling factors
+  results_df <- results_df %>%
     left_join(climwin_results_quad, by = "Parameter") %>%
     mutate(
-      std_val = case_when(
-        mod == "tmax_mod" ~ envt_quality$scaling_factors$tmaxdegc$sd,
-        mod == "vpd_mod" ~ envt_quality$scaling_factors$vpd_tmax_kpa$sd,
-        mod == "photo_mod" ~ envt_quality$scaling_factors$daylh$sd,
-        mod =="GDD_mod" ~ envt_quality$scaling_factors$GDD_modave$sd,
-        mod =="temp_mod" ~ envt_quality$scaling_factors$meanT$sd,
-        mod =="precip_mod" ~ envt_quality$scaling_factors$prcpmmday$sd,
-        mod =="solrad_mod" ~ envt_quality$scaling_factors$sradWm2$sd,
-        mod =="nightT_mod" ~ envt_quality$scaling_factors$tmindegc$sd,
-        TRUE ~ NaN
-      ),
-      mean_val = case_when(
-        mod =="tmax_mod"~ envt_quality$scaling_factors$tmaxdegc$mean,
-        mod =="vpd_mod" ~ envt_quality$scaling_factors$vpd_tmax_kpa$mean,
-        mod =="photo_mod" ~ envt_quality$scaling_factors$daylh$mean,
-        mod =="GDD_mod" ~ envt_quality$scaling_factors$GDD_modave$mean,
-        mod =="temp_mod" ~ envt_quality$scaling_factors$meanT$mean,
-        mod =="precip_mod"~ envt_quality$scaling_factors$prcpmmday$mean,
-        mod =="solrad_mod"~envt_quality$scaling_factors$sradWm2$mean,
-        mod =="nightT_mod" ~ envt_quality$scaling_factors$tmindegc$mean,
-        TRUE ~ NaN
-      )
-    )%>%
+      std_val = get_climate_scale_info(mod, envt_quality)$sd_val,
+      mean_val = get_climate_scale_info(mod, envt_quality)$mean_val
+    ) %>%
     rowwise() %>%
     mutate(
       start = weeks_to_ydays(WindowOpen)$min_yday,
@@ -398,11 +257,6 @@ process_model_results <- function(mymod, envt_quality) {
   
   return(list(model = mymod, results = results_df, signal_plots = signal_plots))
 }
-
-# this is pretty close I just need to unscale the theta
-# and add the right names
-# possibly want to show them as partials against the raw
-# sce start here to make the marginal effects plots
 
 
 # Define model configurations
@@ -449,17 +303,19 @@ model_configs <- list(
   )
 )
 
+# Configure warning settings for model execution
 options(warn = 2)
+
 # Run all models and collect results
 all_results <- list()
-all_plots <-list()
+all_plots <- list()
 
-for(model_name in names(model_configs)) {
+for (model_name in names(model_configs)) {
   config <- model_configs[[model_name]]
   
   cat("Running model:", model_name, "\n")
   
-  # Run model
+  # Run model and process results
   model_result <- run_climwin_model(
     config$data, 
     config$model_type, 
@@ -467,11 +323,7 @@ for(model_name in names(model_configs)) {
   ) %>%
     process_model_results(., config$data)
   
-  # Add a larger left margin to all plots to accommodate the shared y-axis title
-  # model_result$signal_plots <- lapply(
-  #   model_result$signal_plots,
-  #   function(p) p + theme(plot.margin = margin(5.5, 5.5, 5.5, 30, "pt"))
-  # )
+  # Create combined plot with shared y-axis label
   all_plots[[model_name]] <- ggpubr::ggarrange(plotlist = model_result$signal_plots) %>%
     annotate_figure(
       .,
@@ -505,31 +357,18 @@ extract_signal_name <- function(str) {
   }
 }
 
-# count how many there are
-
-tst <- final_results_df %>%
-  rowwise() %>%
-  mutate(signal = extract_signal_name(Parameter)) %>%
-  ungroup() %>% filter(!is.na(climate)) %>% select(model_name, signal, climate) %>%
-  distinct() %>% group_by(model_name, climate) %>% dplyr::tally()
-
-
-# Display summary
+# Display summary statistics
 cat("Final results contain", nrow(final_results_df), "rows across", 
     length(unique(final_results_df$model_name)), "models\n")
 
-# plot all
+# Generate and save plots for all models
 for (model_name in names(all_plots)) {
   plot_filename <- paste0("figures/", model_name, "_clim_effects.png")
   ggsave(plot_filename, all_plots[[model_name]], width = 10, height = 8, bg = "white")
   cat("Saved plot for", model_name, "to", plot_filename, "\n")
 }
-
-# paste params into all_climvars_all_mods in GEE
-View(final_results_df %>% filter(grepl('fixef_includeTX', model_name)))
-
-# get Claude AI to convert these into param files to paste into GEE code
-# Function to convert climwin results dataframe to GEE parameter syntax
+# Generate GEE parameters from results
+# Convert climwin results to GEE-compatible parameter format
 convert_climwin_to_gee_params <- function(df, model_name) {
   
   # Filter for the specific model
@@ -1121,20 +960,16 @@ generate_all_gee_params <- function(final_results_df) {
 }
 
 
-# Example usage:
-# Generate GEE parameters using scaling factors from the dataframe
+# Generate GEE parameter output for all models
 gee_output <- generate_all_gee_params(final_results_df)
 
-# Print the JavaScript code
-cat(gee_output$javascript)
-
-# Save to file
+# Save JavaScript output to file
 writeLines(gee_output$javascript, file.path("figure_inputs", "gee_parameter_sets.js"))
 
-# You can also check the extracted parameters for a specific model
+# Display example parameter extraction for verification
 fixef_includeTX_params <- convert_climwin_to_gee_params(final_results_df, "fixef_includeTX")
-print("Scaling factors extracted for fixef_includeTX:")
-print(paste("tmaxMean:", fixef_includeTX_params$tmaxMean, "tmaxStdDev:", fixef_includeTX_params$tmaxStdDev))
-print(paste("tmeanMean:", fixef_includeTX_params$tmeanMean, "tmeanStdDev:", fixef_includeTX_params$tmeanStdDev))
-print(paste("gddMean:", fixef_includeTX_params$gddMean, "gddStdDev:", fixef_includeTX_params$gddStdDev))
-print(paste("vpdMean:", fixef_includeTX_params$vpdMean, "vpdStdDev:", fixef_includeTX_params$vpdStdDev))
+cat("Scaling factors extracted for fixef_includeTX:\n")
+cat("tmaxMean:", fixef_includeTX_params$tmaxMean, "tmaxStdDev:", fixef_includeTX_params$tmaxStdDev, "\n")
+cat("tmeanMean:", fixef_includeTX_params$tmeanMean, "tmeanStdDev:", fixef_includeTX_params$tmeanStdDev, "\n")
+cat("gddMean:", fixef_includeTX_params$gddMean, "gddStdDev:", fixef_includeTX_params$gddStdDev, "\n")
+cat("vpdMean:", fixef_includeTX_params$vpdMean, "vpdStdDev:", fixef_includeTX_params$vpdStdDev, "\n")
