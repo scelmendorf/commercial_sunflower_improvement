@@ -12,8 +12,7 @@ library(ggplot2)
 library(broom)
 
 
-# if using this set your own paths after requesting your
-# own key and add it to the .gitignore
+# prerequisite to set up NASS API keys
 # get an nass key from here https://quickstats.nass.usda.gov/api/
 # addi it to your enviroment by editing your environment here
 # usethis::edit_r_environ()
