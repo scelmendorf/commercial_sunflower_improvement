@@ -4,6 +4,8 @@ library(lme4)
 library(modelbased)
 library(ggpubr)
 library(marginaleffects)
+
+# Load pre-computed climate model results
 envt_quality_fixef_noTX <- readRDS('figure_inputs/sunflower_climate_fixef_noTX_final.rds')
 envt_quality_fixef_noTX_noYr <- readRDS('figure_inputs/sunflower_climate_fixef_noTX_noYr_final.rds')
 envt_quality_fixef_includeTX <- readRDS('figure_inputs/sunflower_climate_fixef_withTX_final.rds')
@@ -14,7 +16,9 @@ envt_quality_ranef_noTX_noYr <- readRDS('figure_inputs/sunflower_climate_ranef_n
 envt_quality_ranef_includeTX <- readRDS('figure_inputs/sunflower_climate_ranef_withTX_final.rds')
 envt_quality_ranef_includeTX_noYr <- readRDS('figure_inputs/sunflower_climate_ranef_withTX_noYr_final.rds')
 
-# Load pre-computed climate model results
+# ============================================================================
+# UTILITY FUNCTIONS
+# ============================================================================
 
 #' Build and run climwin model based on mod_sel structure
 #' 
@@ -24,21 +28,29 @@ envt_quality_ranef_includeTX_noYr <- readRDS('figure_inputs/sunflower_climate_ra
 #' @return Fitted model object (lmer or lm)
 run_climwin_model <- function(envt_quality, model_type = "ranef", include_year = TRUE) {
   
+  # Validate inputs
+  if (!is.list(envt_quality) || is.null(envt_quality$mod_sel) || is.null(envt_quality$param_thetas)) {
+    stop("envt_quality must be a list containing mod_sel and param_thetas components")
+  }
+  
+  if (!model_type %in% c("ranef", "fixef")) {
+    stop("model_type must be either 'ranef' or 'fixef'")
+  }
+  
   # Get mod_sel data
   
   mod_sel <- envt_quality$mod_sel
   n_terms <- nrow(mod_sel)
   
-  # Build signal terms
+  # Build signal terms based on mod_sel structure
   signal_terms <- character()
-  for(i in 1:n_terms) {
+  for (i in 1:n_terms) {
     signal_name <- paste0("signal", i)
     
-    # Check if quadratic (assuming func column indicates this, or use other logic)
-    # You may need to adjust this condition based on your mod_sel structure
+    # Check if quadratic term is needed
     is_quadratic <- !is.na(mod_sel$func[i]) && mod_sel$func[i] == "quad"
     
-    if(is_quadratic) {
+    if (is_quadratic) {
       signal_terms <- c(signal_terms, signal_name, paste0("I(", signal_name, "^2)"))
     } else {
       signal_terms <- c(signal_terms, signal_name)
@@ -52,15 +64,17 @@ run_climwin_model <- function(envt_quality, model_type = "ranef", include_year =
     formula_parts <- c("year_centered", formula_parts)
   }
   
-  if(model_type == "ranef") {
+  # Build and fit model based on type
+  if (model_type == "ranef") {
     formula_str <- paste("theta ~", paste(formula_parts, collapse = " + "), "+ (1|county_state)")
-    # Use REML = TRUE for final model estimation; set to FALSE for model comparison (AIC, etc.)
+    # Use REML = TRUE for final model estimation
     mymod <- lmer(as.formula(formula_str), data = envt_quality$param_thetas, REML = TRUE)
   } else {
     formula_parts <- c(formula_parts, "county_state")
     formula_str <- paste("theta ~", paste(formula_parts, collapse = " + "))
     mymod <- lm(as.formula(formula_str), data = envt_quality$param_thetas)
   }
+  
   return(mymod)
 }
 
@@ -84,6 +98,15 @@ weeks_to_ydays <- function(wk) {
 #' @param envt_quality List containing scaling_factors data
 #' @return List with sd_val, mean_val, and xaxis_title components
 get_climate_scale_info <- function(climate_var, envt_quality) {
+  
+  # Validate inputs
+  if (is.null(climate_var) || !is.character(climate_var)) {
+    stop("climate_var must be a character string")
+  }
+  
+  if (!is.list(envt_quality) || is.null(envt_quality$scaling_factors)) {
+    stop("envt_quality must contain scaling_factors component")
+  }
   sd_val <- case_when(
     grepl("tmax_mod", climate_var) ~ envt_quality$scaling_factors$tmaxdegc$sd,
     grepl("vpd_mod", climate_var) ~ envt_quality$scaling_factors$vpd_tmax_kpa$sd,
@@ -258,6 +281,9 @@ process_model_results <- function(mymod, envt_quality) {
   return(list(model = mymod, results = results_df, signal_plots = signal_plots))
 }
 
+# ============================================================================
+# MODEL EXECUTION AND RESULTS PROCESSING
+# ============================================================================
 
 # Define model configurations
 model_configs <- list(
@@ -342,13 +368,17 @@ for (model_name in names(model_configs)) {
 final_results_df <- bind_rows(all_results) %>%
   select(model_name, everything())
 
+#' Extract signal name from parameter string
+#' 
+#' @param str Character string containing parameter name
+#' @return Character string with extracted signal name
 extract_signal_name <- function(str) {
   # Handle "I(signalX^2)" format
-  if(grepl("^I\\(signal\\d+\\^2\\)$", str)) {
+  if (grepl("^I\\(signal\\d+\\^2\\)$", str)) {
     return(gsub("I\\(([^\\^]+)\\^2\\)", "\\1", str))
   }
   # Handle "signalX" format
-  else if(grepl("^signal\\d+$", str)) {
+  else if (grepl("^signal\\d+$", str)) {
     return(str)
   }
   # Return original if no pattern matches
@@ -367,6 +397,11 @@ for (model_name in names(all_plots)) {
   ggsave(plot_filename, all_plots[[model_name]], width = 10, height = 8, bg = "white")
   cat("Saved plot for", model_name, "to", plot_filename, "\n")
 }
+
+# ============================================================================
+# GEE PARAMETER GENERATION FUNCTIONS
+# ============================================================================
+
 # Generate GEE parameters from results
 # Convert climwin results to GEE-compatible parameter format
 convert_climwin_to_gee_params <- function(df, model_name) {
