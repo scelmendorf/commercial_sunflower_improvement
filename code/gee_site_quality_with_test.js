@@ -482,7 +482,6 @@ if (!params) {
 }
 
 // Add configurable sample point and determine which state contains it
-// this one is somewhere in Kansas, used to figure out if the code is working right
 var SAMPLE_LON = -100.2; // Edit as needed
 var SAMPLE_LAT = 45.99;   // Edit as needed
 var samplePoint = ee.Geometry.Point([SAMPLE_LON, SAMPLE_LAT]);
