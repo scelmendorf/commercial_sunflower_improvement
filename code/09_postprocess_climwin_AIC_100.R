@@ -1037,7 +1037,9 @@ gee_output <- generate_all_gee_params(final_results_df)
 
 # GEE hates NA so use mean
 gee_output$javascript <- gsub(': NA', ': mean', gee_output$javascript)
-
+gee_output$javascript <- gsub(': mean', ': "mean"', gee_output$javascript)
+gee_output$javascript <- gsub(': min', ': "min"', gee_output$javascript)
+gee_output$javascript <- gsub(': max', ': "max"', gee_output$javascript)
 
 
 # Save JavaScript output to file
