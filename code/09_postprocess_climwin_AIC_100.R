@@ -416,7 +416,10 @@ convert_climwin_to_gee_params <- function(df, model_name) {
   intercept_row <- model_data %>% filter(Parameter == "(Intercept)")
   year_row <- model_data %>% filter(Parameter == "year_centered")
   
-  params$intercept <- ifelse(nrow(intercept_row) > 0, intercept_row$Scaled_Coefficient[1], 0)
+  # params$intercept <- ifelse(nrow(intercept_row) > 0, intercept_row$Scaled_Coefficient[1], 0)
+  params$intercept <- intercept_row$Scaled_Coefficient
+  
+  # for ones with no yr
   params$yearcoef <- ifelse(nrow(year_row) > 0, year_row$Scaled_Coefficient[1], 0)
   
   # Initialize scaling factors from the dataframe
@@ -494,16 +497,14 @@ convert_climwin_to_gee_params <- function(df, model_name) {
   params$tmeanQuadratic_1 <- 0
   params$tmeanLinear_2 <- 0
   params$tmeanQuadratic_2 <- 0
-  params$tmeanLinear <- 0  # For backward compatibility
-  params$tmeanQuadratic <- 0  # For backward compatibility
+
   
   # GDD - up to 2 combinations
   params$gddLinear_1 <- 0
   params$gddQuadratic_1 <- 0
   params$gddLinear_2 <- 0
   params$gddQuadratic_2 <- 0
-  params$gddLinear <- 0  # For backward compatibility
-  params$gddQuadratic <- 0  # For backward compatibility
+
   
   # VPD - up to 4 combinations
   params$vpdLinear_1 <- 0
@@ -537,8 +538,6 @@ convert_climwin_to_gee_params <- function(df, model_name) {
   params$rsdsQuadratic_1 <- 0
   params$rsdsLinear_2 <- 0
   params$rsdsQuadratic_2 <- 0
-  params$rsdsLinear <- 0  # For backward compatibility
-  params$rsdsQuadratic <- 0  # For backward compatibility
   
   # Precipitation - 1 combination
   params$pptLinear <- 0
@@ -549,63 +548,66 @@ convert_climwin_to_gee_params <- function(df, model_name) {
   
   # Initialize time windows to default (not used)
   # Mean temperature windows - up to 2
-  params$tmean1_start <- 10
-  params$tmean1_end <- 10
-  params$tmean2_start <- 10
-  params$tmean2_end <- 10
+  # default is 25 for params not used
+  params$tmean1_start <- 150
+  params$tmean1_end <- 150
+  params$tmean2_start <- 150
+  params$tmean2_end <- 150
   
   
   # Max temperature windows - up to 3
-  params$tmax1_start <- 10
-  params$tmax1_end <- 10
-  params$tmax2_start <- 10
-  params$tmax2_end <- 10
-  params$tmax3_start <- 10
-  params$tmax3_end <- 10
+  params$tmax1_start <- 150
+  params$tmax1_end <- 150
+  params$tmax2_start <- 150
+  params$tmax2_end <- 150
+  params$tmax3_start <- 150
+  params$tmax3_end <- 150
   
   # VPD windows - up to 4
-  params$vpd1_start <- 10
-  params$vpd1_end <- 10
-  params$vpd2_start <- 10
-  params$vpd2_end <- 10
-  params$vpd3_start <- 10
-  params$vpd3_end <- 10
-  params$vpd4_start <- 10
-  params$vpd4_end <- 10
+  params$vpd1_start <- 150
+  params$vpd1_end <- 150
+  params$vpd2_start <- 150
+  params$vpd2_end <- 150
+  params$vpd3_start <- 150
+  params$vpd3_end <- 150
+  params$vpd4_start <- 150
+  params$vpd4_end <- 150
   
   # Min temperature windows - up to 5
-  params$tmin1_start <- 10
-  params$tmin1_end <- 10
-  params$tmin2_start <- 10
-  params$tmin2_end <- 10
-  params$tmin3_start <- 10
-  params$tmin3_end <- 10
-  params$tmin4_start <- 10
-  params$tmin4_end <- 10
-  params$tmin5_start <- 10
-  params$tmin5_end <- 10
+  params$tmin1_start <- 150
+  params$tmin1_end <- 150
+  params$tmin2_start <- 150
+  params$tmin2_end <- 150
+  params$tmin3_start <- 150
+  params$tmin3_end <- 150
+  params$tmin4_start <- 150
+  params$tmin4_end <- 150
+  params$tmin5_start <- 150
+  params$tmin5_end <- 150
   
   
   # GDD windows - up to 2
-  params$gdd1_start <- 10
-  params$gdd1_end <- 10
-  params$gdd2_start <- 10
-  params$gdd2_end <- 10
+  params$gdd1_start <- 150
+  params$gdd1_end <- 150
+  params$gdd2_start <- 150
+  params$gdd2_end <- 150
 
   # Solar radiation windows - up to 2
-  params$rsds1_start <- 10
-  params$rsds1_end <- 10
-  params$rsds2_start <- 10
-  params$rsds2_end <- 10
+  params$rsds1_start <- 150
+  params$rsds1_end <- 150
+  params$rsds2_start <- 150
+  params$rsds2_end <- 150
 
   # Precipitation window - 1
-  params$pr_start <- 10
-  params$pr_end <- 10
+  params$pr_start <- 150
+  params$pr_end <- 150
   
   # Extract climate variable parameters
   signal_counter <- list(tmax = 1, meanT = 1, vpd = 1, nightT = 1, GDD_modave = 1, solrad = 1)
   
   for (i in 1:nrow(model_data)) {
+  #run the first 9 to debug 10
+  # for (i in 1:9){
     row <- model_data[i, ]
     param_name <- row$Parameter
     climate <- row$climate
@@ -619,6 +621,7 @@ convert_climwin_to_gee_params <- function(df, model_name) {
     signal_base <- gsub("I\\(([^\\^]+)\\^2\\)", "\\1", param_name)
     signal_base <- ifelse(grepl("^signal\\d+$", signal_base), signal_base, param_name)
     
+    # only run for climate variables, skip for year, intercept
     if (!is.na(climate) && !is.na(coef_value)) {
       
       # Handle tmax parameters - up to 3 combinations
@@ -643,6 +646,11 @@ convert_climwin_to_gee_params <- function(df, model_name) {
             params$tmax3_end <- end_day
             params$tmaxForm_3 <- stat
           }
+          
+          #if only a linear term no quadratic, increment counter
+          if (sum(grepl(param_name, model_data$Parameter))==1){
+            signal_counter$tmax <- signal_counter$tmax + 1
+          }
         } else if (grepl("^I\\(signal\\d+\\^2\\)$", param_name)) {
           # Quadratic term
           if (signal_num == 1) {
@@ -654,6 +662,7 @@ convert_climwin_to_gee_params <- function(df, model_name) {
           }
           signal_counter$tmax <- signal_counter$tmax + 1
         }
+        # signal_counter$tmax <- signal_counter$tmax + 1
       }
       
       # Handle meanT parameters - up to 2 combinations
@@ -672,6 +681,10 @@ convert_climwin_to_gee_params <- function(df, model_name) {
             params$tmean2_start <- start_day
             params$tmean2_end <- end_day
           }
+          #if only a linear term no quadratic, increment counter
+          if (sum(grepl(param_name, model_data$Parameter))==1){
+            signal_counter$meanT <- signal_counter$meanT + 1
+          }
         } else if (grepl("^I\\(signal\\d+\\^2\\)$", param_name)) {
           # Quadratic term
           if (signal_num == 1) {
@@ -681,6 +694,7 @@ convert_climwin_to_gee_params <- function(df, model_name) {
           }
           signal_counter$meanT <- signal_counter$meanT + 1
         }
+        #signal_counter$meanT <- signal_counter$meanT + 1
       }
       
       # Handle GDD_modave parameters - up to 2 combinations
@@ -699,6 +713,11 @@ convert_climwin_to_gee_params <- function(df, model_name) {
             params$gdd2_start <- start_day
             params$gdd2_end <- end_day
           }
+          #if only a linear term no quadratic, increment counter
+          if (sum(grepl(param_name, model_data$Parameter))==1){
+            signal_counter$GDD_modave <- signal_counter$GDD_modave + 1
+          }
+          
         } else if (grepl("^I\\(signal\\d+\\^2\\)$", param_name)) {
           # Quadratic term
           if (signal_num == 1) {
@@ -708,6 +727,7 @@ convert_climwin_to_gee_params <- function(df, model_name) {
           }
           signal_counter$GDD_modave <- signal_counter$GDD_modave + 1
         }
+        #signal_counter$GDD_modave <- signal_counter$GDD_modave + 1
       }
       
       # Handle VPD parameters - up to 4 combinations
@@ -733,6 +753,10 @@ convert_climwin_to_gee_params <- function(df, model_name) {
             params$vpd4_start <- start_day
             params$vpd4_end <- end_day
           }
+          #if only a linear term no quadratic, increment counter
+          if (sum(grepl(param_name, model_data$Parameter))==1){
+            signal_counter$vpd <- signal_counter$vpd + 1
+          }
         } else if (grepl("^I\\(signal\\d+\\^2\\)$", param_name)) {
           # Quadratic term
           if (signal_num == 1) {
@@ -744,8 +768,9 @@ convert_climwin_to_gee_params <- function(df, model_name) {
           } else if (signal_num == 4) {
             params$vpdQuadratic_4 <- coef_value
           }
-          signal_counter$vpd <- signal_counter$vpd + 1
+           signal_counter$vpd <- signal_counter$vpd + 1
         }
+        #signal_counter$vpd <- signal_counter$vpd + 1
       }
       
       # Handle nightT (minimum temperature) parameters - up to 5 combinations
@@ -756,10 +781,8 @@ convert_climwin_to_gee_params <- function(df, model_name) {
           # Linear term
           if (signal_num == 1) {
             params$tminLinear_1 <- coef_value
-            params$tminLinear <- coef_value  # Backward compatibility
             params$tmin1_start <- start_day
             params$tmin1_end <- end_day
-            params$tmin_start <- start_day  # Backward compatibility
             params$tmin_end <- end_day
             params$tminForm_1 <- stat
           } else if (signal_num == 2) {
@@ -783,11 +806,14 @@ convert_climwin_to_gee_params <- function(df, model_name) {
             params$tmin5_end <- end_day
             params$tminForm_5 <- stat
           }
+          #if only a linear term no quadratic, increment counter
+          if (sum(grepl(param_name, model_data$Parameter))==1){
+            signal_counter$nightT <- signal_counter$nightT + 1
+          }
         } else if (grepl("^I\\(signal\\d+\\^2\\)$", param_name)) {
           # Quadratic term
           if (signal_num == 1) {
             params$tminQuadratic_1 <- coef_value
-            params$tminQuadratic <- coef_value  # Backward compatibility
           } else if (signal_num == 2) {
             params$tminQuadratic_2 <- coef_value
           } else if (signal_num == 3) {
@@ -797,8 +823,9 @@ convert_climwin_to_gee_params <- function(df, model_name) {
           } else if (signal_num == 5) {
             params$tminQuadratic_5 <- coef_value
           }
-          signal_counter$nightT <- signal_counter$nightT + 1
+           signal_counter$nightT <- signal_counter$nightT + 1
         }
+        #signal_counter$nightT <- signal_counter$nightT + 1
       }
       
       # Handle precipitation parameters (1 combination)
@@ -818,26 +845,27 @@ convert_climwin_to_gee_params <- function(df, model_name) {
           # Linear term
           if (signal_num == 1) {
             params$rsdsLinear_1 <- coef_value
-            params$rsdsLinear <- coef_value  # Backward compatibility
             params$rsds1_start <- start_day
             params$rsds1_end <- end_day
-            params$rsds_start <- start_day  # Backward compatibility
-            params$rsds_end <- end_day
           } else if (signal_num == 2) {
             params$rsdsLinear_2 <- coef_value
             params$rsds2_start <- start_day
             params$rsds2_end <- end_day
           }
+          #if only a linear term no quadratic, increment counter
+          if (sum(grepl(param_name, model_data$Parameter))==1){
+            signal_counter$solrad <- signal_counter$solrad + 1
+          }
         } else if (grepl("^I\\(signal\\d+\\^2\\)$", param_name)) {
           # Quadratic term
           if (signal_num == 1) {
             params$rsdsQuadratic_1 <- coef_value
-            params$rsdsQuadratic <- coef_value  # Backward compatibility
           } else if (signal_num == 2) {
             params$rsdsQuadratic_2 <- coef_value
           }
           signal_counter$solrad <- signal_counter$solrad + 1
         }
+        #signal_counter$solrad <- signal_counter$solrad + 1
       }
       
       # Handle photo (daylength) parameters (1 combination)
@@ -855,6 +883,9 @@ convert_climwin_to_gee_params <- function(df, model_name) {
   
   return(params)
 }
+
+#working now SCE is up to here 10/23/2025
+#tst<-convert_climwin_to_gee_params(final_results_df, 'ranef_includeTX_noYr')
 
 # Function to format parameters as GEE JavaScript syntax (UPDATED)
 format_gee_params <- function(params, model_name) {
@@ -883,6 +914,7 @@ format_gee_params <- function(params, model_name) {
   js_string <- paste0(js_string, "    prMean: ", params$prMean, ", prStdDev: ", params$prStdDev, ",\n")
   js_string <- paste0(js_string, "    rsdsWMean: ", params$rsdsWMean, ", rsdsStdDev: ", params$rsdsStdDev, ",\n")
   js_string <- paste0(js_string, "    daylengthMean: ", params$daylengthMean, ", daylengthStdDev: ", params$daylengthStdDev, ",\n\n")
+  #js_string <- paste0(js_string, "    daylengthMean: ", params$daylengthMean, ", daylengthStdDev: ", params$daylengthStdDev, ",\n\n")
   
   # Regression coefficients section (UPDATED for all parameter combinations)
   js_string <- paste0(js_string, "    // Regression coefficients\n")
@@ -922,7 +954,7 @@ format_gee_params <- function(params, model_name) {
   js_string <- paste0(js_string, "    pptLinear: ", params$pptLinear, ", pptForm_1: mean,","\n")
   
   # Photoperiod parameters - 1
-  js_string <- paste0(js_string, "    daylengthLinear: ", params$daylengthLinear, ", daylengthQuadratic: ", params$daylengthQuadratic, "daylengthForm_1: mean,", ",\n\n")
+  js_string <- paste0(js_string, "    daylengthLinear: ", params$daylengthLinear, ", daylengthQuadratic: ", params$daylengthQuadratic, ", daylengthForm_1: mean,", "\n\n")
   
   # Time windows section (UPDATED for all parameter combinations)
   js_string <- paste0(js_string, "    // Time windows (relative to planting DOY)\n")
@@ -1003,8 +1035,17 @@ generate_all_gee_params <- function(final_results_df) {
 # Generate GEE parameter output for all models
 gee_output <- generate_all_gee_params(final_results_df)
 
+# GEE hates NA so use mean
+gee_output$javascript <- gsub(': NA', ': mean', gee_output$javascript)
+
+
+
 # Save JavaScript output to file
 writeLines(gee_output$javascript, file.path("figure_inputs", "gee_parameter_sets_AIC.js"))
+
+
+
+# sce update so min/max/mean quoted and NAs are null and the daylength syntax is fixed, make "mean" the default instead of NA
 
 # Display example parameter extraction for verification
 fixef_includeTX_params <- convert_climwin_to_gee_params(final_results_df, "fixef_includeTX")
