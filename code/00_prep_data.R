@@ -27,7 +27,24 @@ library(tidyverse)
 
 # Load data ------------------------------------------------------------
 
-all_data <- read.csv("../sunflower_digitization_qc/data_derived/sunflower_data_simple.csv")
+# data archived on ag data commons
+all_data <- read.csv(file.path("data", "commercial_sunflower_trials.csv"))
+
+# rename columns slightly as code was written before standardizing capitalization
+all_data <- all_data %>%
+  rename(Trial_ID = trial_ID,
+         Location = location,
+         State =state,
+         Year =year,
+         Unif_Brand = unif_brand,
+         Unif_Hybrid = unif_hybrid,
+         Unif_Name = unif_name,
+         garden_city = trial_city ,
+         garden_county = trial_county,
+         Irrigated = irrigated,
+         Oil_Confection = oil_confection)
+
+
 
 # Make filtered dataset for climate analysis - requires planting date ----------
 

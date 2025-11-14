@@ -6,15 +6,15 @@ library(ggpubr)
 library(marginaleffects)
 
 # Load pre-computed climate model results
-envt_quality_fixef_noTX <- readRDS('figure_inputs/AIC_metric/sunflower_climate_fixef_noTX_final.rds')
-envt_quality_fixef_noTX_noYr <- readRDS('figure_inputs/AIC_metric/sunflower_climate_fixef_noTX_noYr_final.rds')
-envt_quality_fixef_includeTX <- readRDS('figure_inputs/AIC_metric/sunflower_climate_fixef_withTX_final.rds')
-envt_quality_fixef_includeTX_noYr <- readRDS('figure_inputs/AIC_metric/sunflower_climate_fixef_withTX_noYr_final.rds')
+envt_quality_fixef_noTX <- readRDS(file.path('figure_inputs', 'AIC_metric', 'sunflower_climate_fixef_noTX_final.rds'))
+envt_quality_fixef_noTX_noYr <- readRDS(file.path('figure_inputs', 'AIC_metric', 'sunflower_climate_fixef_noTX_noYr_final.rds'))
+envt_quality_fixef_includeTX <- readRDS(file.path('figure_inputs', 'AIC_metric', 'sunflower_climate_fixef_withTX_final.rds'))
+envt_quality_fixef_includeTX_noYr <- readRDS(file.path('figure_inputs', 'AIC_metric', 'sunflower_climate_fixef_withTX_noYr_final.rds'))
 
-envt_quality_ranef_noTX <- readRDS('figure_inputs/AIC_metric/sunflower_climate_ranef_noTX_final.rds')
-envt_quality_ranef_noTX_noYr <- readRDS('figure_inputs/AIC_metric/sunflower_climate_ranef_noTX_noYr_final.rds')
-envt_quality_ranef_includeTX <- readRDS('figure_inputs/AIC_metric/sunflower_climate_ranef_withTX_final.rds')
-envt_quality_ranef_includeTX_noYr <- readRDS('figure_inputs/AIC_metric/sunflower_climate_ranef_withTX_noYr_final.rds')
+envt_quality_ranef_noTX <- readRDS(file.path('figure_inputs', 'AIC_metric', 'sunflower_climate_ranef_noTX_final.rds'))
+envt_quality_ranef_noTX_noYr <- readRDS(file.path('figure_inputs', 'AIC_metric', 'sunflower_climate_ranef_noTX_noYr_final.rds'))
+envt_quality_ranef_includeTX <- readRDS(file.path('figure_inputs', 'AIC_metric', 'sunflower_climate_ranef_withTX_final.rds'))
+envt_quality_ranef_includeTX_noYr <- readRDS(file.path('figure_inputs', 'AIC_metric', 'sunflower_climate_ranef_withTX_noYr_final.rds'))
 
 # ============================================================================
 # UTILITY FUNCTIONS

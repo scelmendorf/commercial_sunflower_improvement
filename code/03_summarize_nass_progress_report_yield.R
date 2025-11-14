@@ -19,6 +19,7 @@ library(broom)
 # type in a line that looks like NASS_API_KEY='XXXXXXX-XXXX-XXXX-ETC'
 # verify it works by running this line
 # Sys.getenv("NASS_API_KEY")
+
 api_key <- Sys.getenv("NASS_API_KEY")
 nassqs_auth(key = api_key)
 
