@@ -1,5 +1,5 @@
 # Clean workspace with pacman unload all
-if(!require(pacman)) install.packages("pacman")
+if (!require(pacman)) install.packages("pacman")
 pacman::p_unload(all)
 
 # Load necessary libraries
@@ -108,7 +108,7 @@ create_choropleth <- function(mod_data, legend_title = "Change in yield per year
         label = sprintf("%.1f", round(Slope, 1))
       ),
       size = 4
-    ) + 
+    ) +
     # Set color scale for slope values
     scale_fill_gradient2(
       low = "brown",
@@ -194,13 +194,13 @@ for (response_var in c(
 
   # Define significance
   data$significant <- data$pval < 0.05
-  
+
   data <- data %>%
     filter(!(State == "TX" & mod != "NASS")) %>%
     # only 4 years of data in thie CO trial for this
     # so include in suppmat regressions but not chloropleth
     filter(!(State == "CO" & response_var == "flower_50pct_days_past_planting"))
-  #}
+  # }
 
   # Get range of slope values for consistent color scale
   slope_range <- range(data$Slope)
@@ -295,10 +295,8 @@ for (response_var in c(
     )
   }
 
-ggsave(final_plot,
-      filename = file.path("figures", paste0(response_var, "_slope_map_no_texas.png")),
-      height = 8, width = 10, bg = "white"
-    )
+  ggsave(final_plot,
+    filename = file.path("figures", paste0(response_var, "_slope_map_no_texas.png")),
+    height = 8, width = 10, bg = "white"
+  )
 }
-
-
