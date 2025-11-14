@@ -28,8 +28,8 @@ all_data <- read.csv(file.path("data", "commercial_sunflower_trials.csv"))
 all_data <- all_data %>%
   rename(Trial_ID = trial_ID,
          Location = location,
-         State =state,
-         Year =year,
+         State = state,
+         Year = year,
          Unif_Brand = unif_brand,
          Unif_Hybrid = unif_hybrid,
          Unif_Name = unif_name,
