@@ -10,7 +10,6 @@ library(mapdata)
 library(grid)
 library(cowplot)
 
-include_texas <- FALSE
 # Get USA map data
 usa <- map_data("state")
 
@@ -163,7 +162,6 @@ for (response_var in c(
   f1 <- read.csv(file.path("figure_inputs", csvs[1]), header = TRUE)
   f2 <- read.csv(file.path("figure_inputs", csvs[2]), header = TRUE)
 
-
   if (response_var == "yield_lb_acre") {
     nass <- readRDS(file.path("figure_inputs", "nass_yield_trends.rds"))
     f3 <- nass$plot_data %>%
@@ -188,7 +186,6 @@ for (response_var in c(
       mutate(mod = factor(mod, levels = c("trial_mean", "breeding", "agronomy", "check")))
   }
 
-
   data <- both_sets
   # Join full state names to our data
   data <- data %>%
@@ -197,11 +194,13 @@ for (response_var in c(
 
   # Define significance
   data$significant <- data$pval < 0.05
-
-    data <- data %>%
-      filter(!(State == "TX" & mod != "NASS"))
-      anti_join(., remove_me)
-  }
+  
+  data <- data %>%
+    filter(!(State == "TX" & mod != "NASS")) %>%
+    # only 4 years of data in thie CO trial for this
+    # so include in suppmat regressions but not chloropleth
+    filter(!(State == "CO" & response_var == "flower_50pct_days_past_planting"))
+  #}
 
   # Get range of slope values for consistent color scale
   slope_range <- range(data$Slope)
@@ -215,7 +214,6 @@ for (response_var in c(
     lat_min = 25, # Southern boundary
     lat_max = 50 # Northern boundary
   )
-
 
   # Create plots for each modality
   if (response_var == "yield_lb_acre") {
@@ -297,16 +295,10 @@ for (response_var in c(
     )
   }
 
-  if (include_texas) {
-    ggsave(final_plot,
-      filename = file.path("figures", paste0(response_var, "_slope_map.png")),
-      height = 8, width = 10, bg = "white"
-    )
-  } else {
-    ggsave(final_plot,
+ggsave(final_plot,
       filename = file.path("figures", paste0(response_var, "_slope_map_no_texas.png")),
       height = 8, width = 10, bg = "white"
     )
-  }
 }
+
 
