@@ -59,7 +59,8 @@ get_legend2 <- function(plot, legend = NULL) {
 }
 
 # Create a function to generate the choropleth map for each modality
-create_choropleth <- function(mod_data, legend_title = "Change in yield per year \n (lbs/acre)") {
+create_choropleth <- function(mod_data, legend_title = "Change in yield per year \n (lbs/acre)",
+                              round_digits = 1) {
   # Extract the modality name
   mod_name <- as.character(mod_data$mod[1])
 
@@ -105,7 +106,7 @@ create_choropleth <- function(mod_data, legend_title = "Change in yield per year
         distinct(),
       aes(
         x = long.centroid, y = lat.centroid,
-        label = sprintf("%.1f", round(Slope, 1))
+        label = sprintf(paste0("%.", round_digits, "f"), round(Slope, round_digits))
       ),
       size = 4
     ) +
@@ -136,6 +137,67 @@ create_choropleth <- function(mod_data, legend_title = "Change in yield per year
     # Add title
     ggtitle(paste0(toupper(substr(mod_name, 1, 1)), substr(mod_name, 2, nchar(mod_name))))
 
+  return(p)
+}
+
+# Create a function to generate a simple reference map with state outlines and abbreviations
+create_reference_map <- function() {
+  # Filter USA map for just the states in our dataset
+  states_to_plot <- usa[usa$region %in% state_mapping$state_name, ]
+  
+  # Get neighboring states for context (all states within our boundaries)
+  context_states <- usa[usa$long >= map_bounds$lon_min &
+    usa$long <= map_bounds$lon_max &
+    usa$lat >= map_bounds$lat_min &
+    usa$lat <= map_bounds$lat_max, ]
+  
+  # Merge state mapping to get state abbreviations
+  map_data <- merge(states_to_plot, state_mapping, by.x = "region", by.y = "state_name")
+  
+  # Calculate state centroids for labels
+  state_centroids <- map_data %>%
+    group_by(State) %>%
+    summarise(
+      long = mean(range(long)),
+      lat = mean(range(lat)),
+      .groups = "drop"
+    )
+  
+  # Create the plot
+  p <- ggplot() +
+    # Add neighboring states as light grey background
+    geom_polygon(
+      data = context_states, aes(x = long, y = lat, group = group),
+      fill = "grey95", color = "grey70", size = 0.3
+    ) +
+    # Add our states with white fill and black borders
+    geom_polygon(
+      data = map_data,
+      aes(x = long, y = lat, group = group),
+      fill = "white", color = "black", size = 0.8
+    ) +
+    # Add state abbreviations as text labels
+    geom_text(
+      data = state_centroids,
+      aes(x = long, y = lat, label = State),
+      size = 3, fontface = "bold"
+    ) +
+    # Set map boundaries
+    coord_fixed(1.3,
+      xlim = c(map_bounds$lon_min, map_bounds$lon_max),
+      ylim = c(map_bounds$lat_min, map_bounds$lat_max)
+    ) +
+    # Customize theme
+    theme_minimal() +
+    theme(
+      axis.text = element_blank(),
+      axis.title = element_blank(),
+      axis.ticks = element_blank(),
+      panel.grid = element_blank(),
+      plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
+    ) +
+    ggtitle("Study Region")
+  
   return(p)
 }
 
@@ -221,6 +283,10 @@ for (response_var in c(
       ggtitle("Statewide Trends \n(USDA)")
   }
 
+  # 1 digit rounding
+  if (response_var %in% c("yield_lb_acre",
+                          "oil_yield_lb_acre",
+                          "value_generic")){
   agronomy_plot <- create_choropleth(data[data$mod == "agronomy", ]) + theme(legend.position = "none") +
     ggtitle("Agronomy + Climate \n component of \n Trial Trends")
   breeding_plot <- create_choropleth(data[data$mod == "breeding", ]) + theme(legend.position = "none") +
@@ -228,6 +294,16 @@ for (response_var in c(
   trial_mean_plot <- create_choropleth(data[data$mod == "trial_mean", ]) + theme(legend.position = "none") +
     ggtitle("Trial Trends \n (overall)")
   check_plot <- create_choropleth(data[data$mod == "check", ]) + theme(legend.position = "none")
+  } else {
+    # 2 digit rounding
+    agronomy_plot <- create_choropleth(data[data$mod == "agronomy", ], round_digits = 2) + theme(legend.position = "none") +
+      ggtitle("Agronomy + Climate \n component of \n Trial Trends")
+    breeding_plot <- create_choropleth(data[data$mod == "breeding", ], round_digits = 2) + theme(legend.position = "none") +
+      ggtitle("Genetic Improvement \n component of \n Trial Trends")
+    trial_mean_plot <- create_choropleth(data[data$mod == "trial_mean", ], round_digits = 2) + theme(legend.position = "none") +
+      ggtitle("Trial Trends \n (overall)")
+    check_plot <- create_choropleth(data[data$mod == "check", ], round_digits = 2) + theme(legend.position = "none")
+  }
 
   # make one plot with legend
   if (response_var == "yield_lb_acre") {
@@ -235,23 +311,23 @@ for (response_var in c(
       legend_title = "Change in yield per year \n (lbs/acre)"
     )
   } else if (response_var == "harvest_moisture_pct") {
-    tst <- create_choropleth(data[data$mod == "trial_mean", ],
+    tst <- create_choropleth(data[data$mod == "trial_mean", ], round_digits = 2,
       legend_title = "Change in harvest moisture per year \n (%)"
     )
   } else if (response_var == "height_cm") {
-    tst <- create_choropleth(data[data$mod == "trial_mean", ],
+    tst <- create_choropleth(data[data$mod == "trial_mean", ], round_digits = 2,
       legend_title = "Change in plant height per year \n (cm)"
     )
   } else if (response_var == "mature_doy") {
-    tst <- create_choropleth(data[data$mod == "trial_mean", ],
+    tst <- create_choropleth(data[data$mod == "trial_mean", ], round_digits = 2,
       legend_title = "Change in maturity date per year \n (day of year)"
     )
   } else if (response_var == "mature_days_past_planting") {
-    tst <- create_choropleth(data[data$mod == "trial_mean", ],
+    tst <- create_choropleth(data[data$mod == "trial_mean", ], round_digits = 2,
       legend_title = "Change in relative maturity timing per year \n (days past planting)"
     )
   } else if (response_var == "oil_pct") {
-    tst <- create_choropleth(data[data$mod == "trial_mean", ],
+    tst <- create_choropleth(data[data$mod == "trial_mean", ], round_digits = 2,
       legend_title = "Change in oil content per year \n (%)"
     )
   } else if (response_var == "oil_yield_lb_acre") {
@@ -259,7 +335,7 @@ for (response_var in c(
       legend_title = "Change in oil yield per year \n (lbs/acre)"
     )
   } else if (response_var == "test_weight_lbs_bushel") {
-    tst <- create_choropleth(data[data$mod == "trial_mean", ],
+    tst <- create_choropleth(data[data$mod == "trial_mean", ], round_digits = 2,
       legend_title = "Change in test weight per year \n (lb/bushel)"
     )
   } else if (response_var == "value_generic") {
@@ -267,7 +343,7 @@ for (response_var in c(
       legend_title = "Change value per year \n (unitless)"
     )
   } else if (response_var == "flower_50pct_days_past_planting") {
-    tst <- create_choropleth(data[data$mod == "trial_mean", ],
+    tst <- create_choropleth(data[data$mod == "trial_mean", ], round_digits = 2,
       legend_title = "Change in relative flowering date per year \n (days past planting)"
     )
   }
@@ -277,20 +353,21 @@ for (response_var in c(
 
   if (response_var == "yield_lb_acre") {
     p1 <- cowplot::plot_grid(nass_plot, trial_mean_plot, ncol = 2)
+    #p1 <- cowplot::plot_grid(reference_map, nass_plot, trial_mean_plot, ncol = 3)
     p1a <- cowplot::plot_grid(NULL, p1, legend, ncol = 1, rel_heights = c(0.1, 1, 0.1))
     p3 <- cowplot::plot_grid(breeding_plot, agronomy_plot, ncol = 1)
     final_plot <- cowplot::plot_grid(
       p1a, p3,
-      align = "none", # axis = "b",
+      align = "none",
       nrow = 1, rel_widths = c(2, 0.8)
     )
   } else {
-    p1 <- cowplot::plot_grid(NULL, trial_mean_plot, ncol = 2)
+    p1 <- cowplot::plot_grid(nass_plot, trial_mean_plot, ncol = 2)
     p1a <- cowplot::plot_grid(NULL, p1, legend, ncol = 1, rel_heights = c(0.1, 1, 0.1))
     p3 <- cowplot::plot_grid(breeding_plot, agronomy_plot, ncol = 1)
     final_plot <- cowplot::plot_grid(
       p1a, p3,
-      align = "none", # axis = "b",
+      align = "none",
       nrow = 1, rel_widths = c(2, 0.8)
     )
   }
@@ -300,3 +377,10 @@ for (response_var in c(
     height = 8, width = 10, bg = "white"
   )
 }
+
+# Create reference map
+reference_map <- create_reference_map()
+ggsave(reference_map,
+       filename = file.path("figures", "reference_map.png"),
+       height = 4, width = 4, bg = "white"
+)
