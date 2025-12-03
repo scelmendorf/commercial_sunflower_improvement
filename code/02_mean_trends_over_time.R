@@ -70,7 +70,8 @@ filtered_data <- all_data %>%
     value_generic = yield_lb_acre*(1+0.02 * (oil_pct -40))
   )
 
-
+length(unique(filtered_data$Trial_ID))
+length(unique(filtered_data$Unif_Name))
 # determine checks as very common varieties, sometimed labels as checks
 # plus some occasional ones# checks <- alldata %>%
 #   group_by(Unif_Name) %>%
