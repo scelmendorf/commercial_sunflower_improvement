@@ -97,6 +97,7 @@ weeks_to_ydays <- function(wk) {
 #' @param climate_var Character string indicating climate variable type
 #' @param envt_quality List containing scaling_factors data
 #' @return List with sd_val, mean_val, and xaxis_title components
+# get_climate_scale_info("tmax_mod", envt_quality)
 get_climate_scale_info <- function(climate_var, envt_quality) {
   
   # Validate inputs
@@ -151,6 +152,8 @@ get_climate_scale_info <- function(climate_var, envt_quality) {
 #' @param mymod Fitted model object (lmer or lm)
 #' @param envt_quality List containing mod_sel and scaling data
 #' @return List with model, results dataframe, and signal_plots
+
+#process_model_results(mymod = model_result, envt_quality = config$data)
 process_model_results <- function(mymod, envt_quality) {
   # Extract model coefficients based on model type
   if (class(mymod)[1] == "lmerMod") {
@@ -186,7 +189,12 @@ process_model_results <- function(mymod, envt_quality) {
     scale_info <- get_climate_scale_info(climate_var, envt_quality)
     sd_val <- scale_info$sd_val
     mean_val <- scale_info$mean_val
+    stat_val <- signal_info$stat[1]
+    
     xaxis_title <- scale_info$xaxis_title
+    if (stat_val!="mean"){
+      xaxis_title <- paste0(xaxis_title, " [", stat_val, "]")
+    }
     
     sig <- ifelse(signal_info$pval < 0.05, "sign", "non")
     
@@ -394,7 +402,7 @@ cat("Final results contain", nrow(final_results_df), "rows across",
 # Generate and save plots for all models
 for (model_name in names(all_plots)) {
   plot_filename <- paste0("figures/", model_name, "_clim_effects_AIC.png")
-  ggsave(plot_filename, all_plots[[model_name]], width = 10, height = 8, bg = "white")
+  ggsave(plot_filename, all_plots[[model_name]], width = 10.2, height = 8, bg = "white")
   cat("Saved plot for", model_name, "to", plot_filename, "\n")
 }
 
