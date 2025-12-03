@@ -195,9 +195,7 @@ create_reference_map <- function() {
       axis.ticks = element_blank(),
       panel.grid = element_blank(),
       plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
-    ) +
-    ggtitle("Study Region")
-  
+    ) 
   return(p)
 }
 
