@@ -464,6 +464,26 @@ for (response_var in c(
     nass_inputs <- readRDS(file.path(
       "figure_inputs", "nass_yield_trends.rds"
     ))
+    
+    # back of the envelope on yield improvements in individual states
+    # modND <- lm (Value ~ as.numeric(year), data = nass_inputs$plot_data %>%
+    # filter(state_alpha == 'ND'))
+    # predict (modND, newdata = data.frame(year = 1980))
+    # predict (modND, newdata = data.frame(year = 2020))
+    # predict (modND, newdata = data.frame(year = 1995))
+    # 
+    # modSD <- lm (Value ~ as.numeric(year), data = nass_inputs$plot_data %>%
+    #                filter(state_alpha == 'SD'))
+    # predict (modSD, newdata = data.frame(year = 1980))
+    # predict (modSD, newdata = data.frame(year = 2020))
+    
+    # modCO <- lm (Value ~ as.numeric(year), data = nass_inputs$plot_data %>%
+    #                filter(state_alpha == 'CO'))
+    # predict (modND, newdata = data.frame(year = 1995))-
+    # predict (modCO, newdata = data.frame(year = 1995))
+    # predict (modND, newdata = data.frame(year = 2020))-
+    # predict (modCO, newdata = data.frame(year = 2020))
+    # difference of 146
 
     nass_plot <- ggplot(nass_inputs$plot_data, aes(
       x = as.numeric(year), y = Value,
