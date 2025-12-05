@@ -528,10 +528,12 @@ for (response_var in c(
       plot_layout(widths = c(1, 1, 1, 1, 1))
 
     ggsave(
-      file.path("figures", paste0(response_var, "_all_trends.jpg")),
+      file.path("figures", paste0(response_var, "_all_trends.tiff")),
       combined_plot,
       width = 25,
-      height = 8
+      height = 8,
+      #width = 7.48031,
+      #height = 2.39, dpi = 400
     )
   } else {
     combined_plot <- (trends$trial_plot +
@@ -549,10 +551,11 @@ for (response_var in c(
       plot_layout(widths = c(1, 1, 1, 1))
 
     ggsave(
-      file.path("figures", paste0(response_var, "_all_trends.jpg")),
+      file.path("figures", paste0(response_var, "_all_trends.tiff")),
       combined_plot,
       width = 20,
-      height = 8
+      height = 8,
+      dpi = 400
     )
   }
 }
@@ -722,8 +725,9 @@ combined_plot <- plot_grid(
 )
 
 ggsave(
-  file.path("figures", paste0("planting_harvest", "_all_trends.jpg")),
+  file.path("figures", paste0("planting_harvest", "_all_trends.tiff")),
   combined_plot,
   width = 15,
-  height = 9
+  height = 9,
+  dpi = 400
 )

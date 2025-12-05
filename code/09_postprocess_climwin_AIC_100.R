@@ -401,8 +401,9 @@ cat("Final results contain", nrow(final_results_df), "rows across",
 
 # Generate and save plots for all models
 for (model_name in names(all_plots)) {
-  plot_filename <- paste0("figures/", model_name, "_clim_effects_AIC.png")
-  ggsave(plot_filename, all_plots[[model_name]], width = 10.2, height = 8, bg = "white")
+  plot_filename <- paste0("figures/", model_name, "_clim_effects_AIC.tiff")
+  ggsave(plot_filename, all_plots[[model_name]], width = 10.2, height = 8, bg = "white",
+         dpi = 500)
   cat("Saved plot for", model_name, "to", plot_filename, "\n")
 }
 
@@ -891,9 +892,6 @@ convert_climwin_to_gee_params <- function(df, model_name) {
   
   return(params)
 }
-
-#working now SCE is up to here 10/23/2025
-#tst<-convert_climwin_to_gee_params(final_results_df, 'ranef_includeTX_noYr')
 
 # Function to format parameters as GEE JavaScript syntax (UPDATED)
 format_gee_params <- function(params, model_name) {

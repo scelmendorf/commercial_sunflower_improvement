@@ -121,9 +121,9 @@ create_plots <- function(time_period, fix_rand_options, tx_options, yr_options) 
         # Save individual plot
         ggsave(
           file.path("figures", paste0(
-            "SiteQuality_", time_period, "_", fix_rand, "_", tx_var, "_", yr_var, ".png"
+            "SiteQuality_", time_period, "_", fix_rand, "_", tx_var, "_", yr_var, ".tiff"
           )),
-          plot = p, width = 10, height = 6, dpi = 600
+          plot = p, width = 10, height = 6, dpi = 500
         )
 
         plot_list[[plot_index]] <- p
@@ -246,9 +246,9 @@ create_difference_rasters <- function(fix_rand_options, tx_options, yr_options) 
         # Save individual plot
         ggsave(
           file.path("figures", paste0(
-            "SiteQuality_Difference_", fix_rand, "_", tx_var, "_", yr_var, ".png"
+            "SiteQuality_Difference_", fix_rand, "_", tx_var, "_", yr_var, ".tiff"
           )),
-          plot = p, width = 10, height = 6, dpi = 600
+          plot = p, width = 10, height = 6, dpi = 500
         )
 
         plot_list[[plot_index]] <- p
@@ -266,8 +266,8 @@ tx_options <- c("noTX", "includeTX")
 yr_options <- c("noYr", "Yr")
 
 # Create plots for each time period
-current_plots <- create_plots("Current", fix_rand_options, tx_options, yr_options)
-future_plots <- create_plots("Future", fix_rand_options, tx_options, yr_options)
+#current_plots <- create_plots("Current", fix_rand_options, tx_options, yr_options)
+#future_plots <- create_plots("Future", fix_rand_options, tx_options, yr_options)
 difference_plots <- create_difference_rasters(fix_rand_options, tx_options, yr_options)
 
 # Create multi-panel figures for each time period
@@ -289,18 +289,17 @@ create_multipanel <- function(plot_list, filename_suffix, time_period) {
       theme(plot.background = element_rect(fill = "white", color = NA)))
 
     ggsave(
-      file.path("figures", paste0("SiteQuality_", filename_suffix, "_all_combinations.png")),
-      plot = final_plot, width = 16, height = 8, dpi = 600, bg = "white"
+      file.path("figures", paste0("SiteQuality_", filename_suffix, "_all_combinations.tiff")),
+      plot = final_plot, width = 16, height = 8, dpi = 400, bg = "white"
     )
   }
 }
 
 # Create multi-panel figures
-create_multipanel(current_plots, "Current", "Current")
-create_multipanel(future_plots, "Future", "Future")
+#create_multipanel(current_plots, "Current", "Current")
+#create_multipanel(future_plots, "Future", "Future")
 create_multipanel(difference_plots, "Difference", "Difference")
 
-# SCE start HERE 11/4
 # Difference values
 fill_limits <- c(-400, 400)
 fill_breaks <- seq(-400, 400, by = 200)
@@ -314,6 +313,6 @@ main_fig <- difference_plots[[4]] +
   ggtitle(NULL)
 
 ggsave(main_fig,
-  file = file.path("figures", "SiteQuality_Difference_fixef_includeTX_Yr_main_figure.png"),
-  width = 10, height = 6, dpi = 600
+  file = file.path("figures", "SiteQuality_Difference_fixef_includeTX_Yr_main_figure.tiff"),
+  width = 10, height = 6, dpi = 500
 )

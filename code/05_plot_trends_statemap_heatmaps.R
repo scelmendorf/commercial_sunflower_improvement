@@ -199,8 +199,8 @@ create_reference_map <- function() {
   return(p)
 }
 
-for (response_var in c(
-  "oil_pct", "yield_lb_acre", "flower_50pct_days_past_planting",
+for (response_var in c("oil_pct", 
+  "yield_lb_acre", "flower_50pct_days_past_planting",
   "oil_yield_lb_acre", "harvest_moisture_pct",
   "height_cm", "value_generic", "test_weight_lbs_bushel"
 )) {
@@ -360,7 +360,7 @@ for (response_var in c(
       nrow = 1, rel_widths = c(2, 0.8)
     )
   } else {
-    p1 <- cowplot::plot_grid(nass_plot, trial_mean_plot, ncol = 2)
+    p1 <- cowplot::plot_grid(NULL, trial_mean_plot, ncol = 2)
     p1a <- cowplot::plot_grid(NULL, p1, legend, ncol = 1, rel_heights = c(0.1, 1, 0.1))
     p3 <- cowplot::plot_grid(breeding_plot, agronomy_plot, ncol = 1)
     final_plot <- cowplot::plot_grid(
@@ -371,14 +371,14 @@ for (response_var in c(
   }
 
   ggsave(final_plot,
-    filename = file.path("figures", paste0(response_var, "_slope_map_no_texas.png")),
-    height = 8, width = 10, bg = "white"
+    filename = file.path("figures", paste0(response_var, "_slope_map_no_texas.tiff")),
+    height = 8, width = 10, bg = "white", dpi = 300
   )
 }
 
 # Create reference map
 reference_map <- create_reference_map()
 ggsave(reference_map,
-       filename = file.path("figures", "reference_map.png"),
-       height = 4, width = 4, bg = "white"
+       filename = file.path("figures", "reference_map.tiff"),
+       height = 4, width = 4, bg = "white", dpi = 300
 )

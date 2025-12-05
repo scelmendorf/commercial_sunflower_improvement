@@ -5,7 +5,7 @@
 *.Rproj
 data_derived/*
 figure_inputs/*
+figures/renamed_for_journal*
 code/notUSED*
 data/*
-figures/*
 code/utility_scripts/*
