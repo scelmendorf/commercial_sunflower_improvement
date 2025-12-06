@@ -399,6 +399,27 @@ extract_signal_name <- function(str) {
 cat("Final results contain", nrow(final_results_df), "rows across", 
     length(unique(final_results_df$model_name)), "models\n")
 
+write.csv (final_results_df %>%
+             filter(!is.na(climate)) %>%
+             select(-WindowOpen, -WindowClose, -Scaled_Coefficient, -Std_Err, -std_val, -mean_val) %>%
+             mutate(across(where(is.numeric), ~ round(.x, 2))) %>%   # ← round all numeric columns
+             mutate(clim_var = 
+                      case_when(
+                        climate == "tmax" ~ "max temperature (°C)",
+                        climate == "vpd" ~ "vapor pressure deficit (kPa)",
+                        climate == "photo" ~ "photoperiod (hours)",
+                        climate == "GDD_modave" ~ "growing degree day (°C)",
+                        climate == "solrad" ~ "solar radiation (W m^-2 day^-1)",
+                        climate == "precip" ~ "precipitation (mm d^-1)",
+                        climate == "meanT" ~ "mean temperature (°C)",
+                        climate == "nightT" ~ "min temperature (°C)",
+                      )) %>%
+             select(model_name, clim_var, start, end, Parameter, func, pval), 'figures/climwin_model_results_summary.csv', row.names = FALSE)
+
+
+
+
+
 # Generate and save plots for all models
 for (model_name in names(all_plots)) {
   plot_filename <- paste0("figures/", model_name, "_clim_effects_AIC.tiff")

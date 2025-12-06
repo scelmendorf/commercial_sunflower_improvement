@@ -1,0 +1,85 @@
+"model_name","clim_var","start","end","Parameter","func","pval"
+"ranef_noTX","max temperature (°C)",52,72,"signal1","quad",0
+"ranef_noTX","max temperature (°C)",52,72,"I(signal1^2)","quad",0
+"ranef_noTX","photoperiod (hours)",17,23,"signal2","lin",0
+"ranef_noTX","min temperature (°C)",10,93,"signal3","quad",0.01
+"ranef_noTX","min temperature (°C)",10,93,"I(signal3^2)","quad",0.01
+"ranef_noTX","vapor pressure deficit (kPa)",17,23,"signal4","quad",0
+"ranef_noTX","vapor pressure deficit (kPa)",17,23,"I(signal4^2)","quad",0
+"ranef_noTX","min temperature (°C)",129,142,"signal5","lin",0.04
+"ranef_noTX","min temperature (°C)",73,100,"signal6","quad",0
+"ranef_noTX","min temperature (°C)",73,100,"I(signal6^2)","quad",0
+"ranef_noTX","min temperature (°C)",73,114,"signal7","quad",0.03
+"ranef_noTX","min temperature (°C)",73,114,"I(signal7^2)","quad",0.03
+"fixef_noTX","max temperature (°C)",66,72,"signal1","quad",0
+"fixef_noTX","max temperature (°C)",66,72,"I(signal1^2)","quad",0
+"fixef_noTX","mean temperature (°C)",10,30,"signal2","quad",0
+"fixef_noTX","mean temperature (°C)",10,30,"I(signal2^2)","quad",0
+"fixef_noTX","growing degree day (°C)",73,100,"signal3","quad",0.01
+"fixef_noTX","growing degree day (°C)",73,100,"I(signal3^2)","quad",0.01
+"fixef_noTX","precipitation (mm d^-1)",129,135,"signal4","lin",0.05
+"fixef_noTX","vapor pressure deficit (kPa)",45,72,"signal5","lin",0
+"fixef_noTX","max temperature (°C)",38,65,"signal6","lin",0.04
+"fixef_noTX","min temperature (°C)",136,142,"signal7","lin",0.05
+"fixef_noTX","vapor pressure deficit (kPa)",80,86,"signal8","quad",0.02
+"fixef_noTX","vapor pressure deficit (kPa)",80,86,"I(signal8^2)","quad",0.02
+"fixef_noTX","mean temperature (°C)",80,114,"signal9","quad",0.05
+"fixef_noTX","mean temperature (°C)",80,114,"I(signal9^2)","quad",0.05
+"fixef_noTX","max temperature (°C)",122,135,"signal10","quad",0
+"fixef_noTX","max temperature (°C)",122,135,"I(signal10^2)","quad",0
+"ranef_includeTX","max temperature (°C)",52,72,"signal1","quad",0
+"ranef_includeTX","max temperature (°C)",52,72,"I(signal1^2)","quad",0
+"ranef_includeTX","mean temperature (°C)",10,30,"signal2","quad",0
+"ranef_includeTX","mean temperature (°C)",10,30,"I(signal2^2)","quad",0
+"ranef_includeTX","max temperature (°C)",66,86,"signal3","quad",0
+"ranef_includeTX","max temperature (°C)",66,86,"I(signal3^2)","quad",0
+"ranef_includeTX","precipitation (mm d^-1)",129,135,"signal4","lin",0
+"ranef_includeTX","solar radiation (W m^-2 day^-1)",10,65,"signal5","lin",0.01
+"ranef_includeTX","min temperature (°C)",136,142,"signal6","quad",0.03
+"ranef_includeTX","min temperature (°C)",136,142,"I(signal6^2)","quad",0.03
+"ranef_includeTX","max temperature (°C)",122,135,"signal7","quad",0.05
+"ranef_includeTX","max temperature (°C)",122,135,"I(signal7^2)","quad",0.05
+"fixef_includeTX","max temperature (°C)",66,72,"signal1","quad",0
+"fixef_includeTX","max temperature (°C)",66,72,"I(signal1^2)","quad",0
+"fixef_includeTX","vapor pressure deficit (kPa)",10,72,"signal2","quad",0
+"fixef_includeTX","vapor pressure deficit (kPa)",10,72,"I(signal2^2)","quad",0
+"fixef_includeTX","growing degree day (°C)",38,44,"signal3","lin",0
+"ranef_noTX_noYr","max temperature (°C)",66,72,"signal1","quad",0
+"ranef_noTX_noYr","max temperature (°C)",66,72,"I(signal1^2)","quad",0
+"ranef_noTX_noYr","mean temperature (°C)",10,30,"signal2","quad",0
+"ranef_noTX_noYr","mean temperature (°C)",10,30,"I(signal2^2)","quad",0
+"ranef_noTX_noYr","solar radiation (W m^-2 day^-1)",10,65,"signal3","lin",0
+"ranef_noTX_noYr","growing degree day (°C)",73,100,"signal4","quad",0
+"ranef_noTX_noYr","growing degree day (°C)",73,100,"I(signal4^2)","quad",0
+"ranef_noTX_noYr","precipitation (mm d^-1)",129,135,"signal5","lin",0.04
+"ranef_noTX_noYr","min temperature (°C)",136,142,"signal6","lin",0.01
+"fixef_noTX_noYr","max temperature (°C)",66,72,"signal1","quad",0
+"fixef_noTX_noYr","max temperature (°C)",66,72,"I(signal1^2)","quad",0
+"fixef_noTX_noYr","mean temperature (°C)",10,30,"signal2","quad",0
+"fixef_noTX_noYr","mean temperature (°C)",10,30,"I(signal2^2)","quad",0
+"fixef_noTX_noYr","growing degree day (°C)",73,100,"signal3","quad",0
+"fixef_noTX_noYr","growing degree day (°C)",73,100,"I(signal3^2)","quad",0
+"fixef_noTX_noYr","precipitation (mm d^-1)",129,135,"signal4","lin",0.05
+"fixef_noTX_noYr","vapor pressure deficit (kPa)",45,72,"signal5","lin",0.01
+"fixef_noTX_noYr","max temperature (°C)",38,65,"signal6","lin",0.05
+"fixef_noTX_noYr","vapor pressure deficit (kPa)",101,114,"signal7","quad",0.03
+"fixef_noTX_noYr","vapor pressure deficit (kPa)",101,114,"I(signal7^2)","quad",0.03
+"ranef_includeTX_noYr","max temperature (°C)",66,72,"signal1","quad",0
+"ranef_includeTX_noYr","max temperature (°C)",66,72,"I(signal1^2)","quad",0
+"ranef_includeTX_noYr","mean temperature (°C)",10,30,"signal2","quad",0
+"ranef_includeTX_noYr","mean temperature (°C)",10,30,"I(signal2^2)","quad",0
+"ranef_includeTX_noYr","solar radiation (W m^-2 day^-1)",10,65,"signal3","lin",0
+"ranef_includeTX_noYr","growing degree day (°C)",38,100,"signal4","quad",0.01
+"ranef_includeTX_noYr","growing degree day (°C)",38,100,"I(signal4^2)","quad",0.01
+"ranef_includeTX_noYr","min temperature (°C)",66,142,"signal5","lin",0.01
+"ranef_includeTX_noYr","solar radiation (W m^-2 day^-1)",129,135,"signal6","lin",0
+"fixef_includeTX_noYr","max temperature (°C)",66,72,"signal1","quad",0
+"fixef_includeTX_noYr","max temperature (°C)",66,72,"I(signal1^2)","quad",0
+"fixef_includeTX_noYr","mean temperature (°C)",10,30,"signal2","quad",0
+"fixef_includeTX_noYr","mean temperature (°C)",10,30,"I(signal2^2)","quad",0
+"fixef_includeTX_noYr","growing degree day (°C)",73,100,"signal3","quad",0
+"fixef_includeTX_noYr","growing degree day (°C)",73,100,"I(signal3^2)","quad",0
+"fixef_includeTX_noYr","precipitation (mm d^-1)",129,135,"signal4","lin",0.03
+"fixef_includeTX_noYr","vapor pressure deficit (kPa)",45,72,"signal5","lin",0.01
+"fixef_includeTX_noYr","max temperature (°C)",38,65,"signal6","lin",0.03
+"fixef_includeTX_noYr","min temperature (°C)",136,142,"signal7","lin",0.05
