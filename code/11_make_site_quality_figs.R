@@ -1,8 +1,14 @@
+# Clean workspace with pacman unload all
+if (!require(pacman)) install.packages("pacman")
+pacman::p_unload(all)
+
 library(terra)
 library(sf)
 library(ggplot2)
 library(maps)
 library(cowplot)
+
+options(warn =1) # warn only for crs
 
 # Define the directory to search
 raster_dir <- file.path("figure_inputs", "gee")
@@ -45,7 +51,7 @@ create_plots <- function(time_period, fix_rand_options, tx_options, yr_options) 
         r <- if (length(raster_list) == 1) raster_list[[1]] else do.call(mosaic, raster_list)
 
         # Step 2: Get state polygons and convert to sf
-        states_sf <- st_as_sf(map("state", plot = FALSE, fill = TRUE))
+        states_sf <- st_as_sf(maps::map("state", plot = FALSE, fill = TRUE))
         st_crs(states_sf) <- 4326 # Assign CRS (WGS84)
 
         # Step 3: Filter for specific states
@@ -119,12 +125,12 @@ create_plots <- function(time_period, fix_rand_options, tx_options, yr_options) 
           theme(plot.subtitle = element_text(size = 9))
 
         # Save individual plot
-        ggsave(
-          file.path("figures", paste0(
-            "SiteQuality_", time_period, "_", fix_rand, "_", tx_var, "_", yr_var, ".tiff"
-          )),
-          plot = p, width = 10, height = 6, dpi = 500
-        )
+        # ggsave(
+        #   file.path("figures", paste0(
+        #     "SiteQuality_", time_period, "_", fix_rand, "_", tx_var, "_", yr_var, ".tiff"
+        #   )),
+        #   plot = p, width = 10, height = 6, dpi = 500
+        # )
 
         plot_list[[plot_index]] <- p
         plot_index <- plot_index + 1
@@ -183,7 +189,7 @@ create_difference_rasters <- function(fix_rand_options, tx_options, yr_options) 
         diff_r <- future_r - current_r
 
         # Step 2: Get state polygons and convert to sf
-        states_sf <- st_as_sf(map("state", plot = FALSE, fill = TRUE))
+        states_sf <- st_as_sf(maps::map("state", plot = FALSE, fill = TRUE))
         st_crs(states_sf) <- 4326 # Assign CRS (WGS84)
 
         # Step 3: Filter for specific states
@@ -266,8 +272,9 @@ tx_options <- c("noTX", "includeTX")
 yr_options <- c("noYr", "Yr")
 
 # Create plots for each time period
-#current_plots <- create_plots("Current", fix_rand_options, tx_options, yr_options)
-#future_plots <- create_plots("Future", fix_rand_options, tx_options, yr_options)
+# these lack intercept so are only relative
+current_plots <- create_plots("Current", fix_rand_options, tx_options, yr_options)
+future_plots <- create_plots("Future", fix_rand_options, tx_options, yr_options)
 difference_plots <- create_difference_rasters(fix_rand_options, tx_options, yr_options)
 
 # Create multi-panel figures for each time period

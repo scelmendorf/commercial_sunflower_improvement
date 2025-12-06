@@ -1,6 +1,6 @@
 # Read in .csv mapping figure names to order in manuscript
 
-if(!dir.exists(file.path("figures", "renamed_for_journal"))){
+if (!dir.exists(file.path("figures", "renamed_for_journal"))) {
   dir.create(file.path("figures", "renamed_for_journal"))
 }
 
