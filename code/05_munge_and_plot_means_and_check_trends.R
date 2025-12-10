@@ -615,7 +615,7 @@ nass_plot_planting <- ggplot(nass_inputs$plot_data %>%
   facet_wrap(~ factor(state_alpha, c(rev(c("TX", "KS", "CO", "NE", "SD", "ND")))), ncol = 1) +
   scale_color_identity() +
   scale_y_date(date_labels = "%b-%d") +
-  ggtitle("Planting Date Trends by State \n Source: USDA - NASS") +
+  ggtitle("Planting Date Trends \nby State \nSource: USDA - NASS") +
   labs(
     subtitle = paste(
       "Per-state predictions with 95% CI and slope",
@@ -676,7 +676,7 @@ nass_plot_harvest <- ggplot(nass_inputs$plot_data %>%
   facet_wrap(~ factor(state_alpha, c(rev(c("TX", "KS", "CO", "NE", "SD", "ND")))), ncol = 1) +
   scale_color_identity() +
   scale_y_date(date_labels = "%b-%d") +
-  ggtitle("Harvest Date Trends by State \n Source: USDA - NASS") +
+  ggtitle("Harvest Date Trends \nby State \nSource: USDA - NASS") +
   labs(
     subtitle = paste(
       "Per-state predictions with 95% CI and slope",
