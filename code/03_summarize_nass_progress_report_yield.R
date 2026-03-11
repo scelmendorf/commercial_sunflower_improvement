@@ -167,4 +167,11 @@ write_rds(
 )
 
 
+# extract the se for reporting in the manuscript
+# yield_data <-nass_yield_trends
+
+yield_data$plot_data %>%
+  select(state_alpha,  slope, se ) %>%
+  distinct()
+
 
