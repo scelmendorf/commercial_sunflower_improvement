@@ -97,8 +97,8 @@ create_plots <- function(time_period, fix_rand_options, tx_options, yr_options) 
           )
         } else {
           # Difference values
-          fill_limits <- c(-1000, 1000)
-          fill_breaks <- seq(-1000, 1000, by = 500)
+          fill_limits <- c(-1200, 1000)
+          fill_breaks <- seq(-1200, 1000, by = 500)
           fill_colors <- scale_fill_gradient2(
             low = "saddlebrown", mid = "grey80", high = "darkblue",
             midpoint = 0, na.value = NA,
@@ -195,9 +195,14 @@ create_difference_rasters <- function(fix_rand_options, tx_options, yr_options) 
         # Step 3: Filter for specific states
         target_states <- c(
           "colorado", "nebraska", "south dakota",
-          "north dakota", "kansas", "texas", "oklahoma",
+          "north dakota", "kansas", #"texas", "oklahoma",
           "minnesota"
         )
+        
+        if(tx_var == "includeTX") {
+          target_states <- c(target_states, "texas", "oklahoma")
+        }
+        
         states_subset <- states_sf[states_sf$ID %in% target_states, ]
 
         # Step 4: Reproject to match raster CRS
@@ -231,9 +236,9 @@ create_difference_rasters <- function(fix_rand_options, tx_options, yr_options) 
           scale_fill_gradient2(
             low = "saddlebrown", mid = "grey80", high = "darkblue",
             midpoint = 0, na.value = NA,
-            limits = c(-1000, 1000),
-            breaks = seq(-1000, 1000, by = 500),
-            labels = seq(-1000, 1000, by = 500)
+            limits = c(-1200, 1000),
+            breaks = seq(-1200, 1000, by = 500),
+            labels = seq(-1200, 1000, by = 500)
           ) +
           coord_sf(crs = crs(diff_r)) +
           labs(
@@ -276,6 +281,21 @@ yr_options <- c("noYr", "Yr")
 current_plots <- create_plots("Current", fix_rand_options, tx_options, yr_options)
 future_plots <- create_plots("Future", fix_rand_options, tx_options, yr_options)
 difference_plots <- create_difference_rasters(fix_rand_options, tx_options, yr_options)
+
+#determine range
+b <- lapply(difference_plots, function(x) ggplot_build(x))
+yrange <- lapply(b, function(x) x$layout$panel_params[[1]]$y_range)
+ymin <- min(unlist(lapply(yrange , function(x) min(x))))
+ymax <- max(unlist(lapply(yrange , function(x) max(x))))
+
+xrange <- lapply(b, function(x) x$layout$panel_params[[1]]$x_range)
+xmin <- min(unlist(lapply(xrange , function(x) min(x))))
+xmax <- max(unlist(lapply(xrange , function(x) max(x))))
+
+# Apply consistent limits to all plots by adding coord_sf with explicit limits
+difference_plots <- lapply(difference_plots, function(p) {
+  p + coord_sf(xlim = c(xmin, xmax), ylim = c(ymin, ymax), expand = FALSE)
+})
 
 # Create multi-panel figures for each time period
 create_multipanel <- function(plot_list, filename_suffix, time_period) {
