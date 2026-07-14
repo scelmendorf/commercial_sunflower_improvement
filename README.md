@@ -105,4 +105,4 @@ commercial_sunflower_improvement/
 - R with packages: tidyverse, lme4, metafor, rnassqs, terra, sf, ggplot2, climwin
 - NASS API key (obtain from https://quickstats.nass.usda.gov/api/)
 - Google Earth Engine account (for spatial projection scripts)
-- Sunflower trial data (commercial varieties); available from Ag Data Commons at [DOI:10.15482/USDA.ADC/c.8203811](https://doi.org/10.15482/USDA.ADC/30913778.v1)
+- Sunflower trial data (commercial varieties); available from Ag Data Commons at [DOI:10.15482/USDA.ADC/30913778.v1](https://doi.org/10.15482/USDA.ADC/30913778.v1)
